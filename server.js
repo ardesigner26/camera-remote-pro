@@ -42,6 +42,11 @@ io.on('connection', (socket) => {
         socket.to(data.roomId).emit('camera-control', data);
     });
 
+    socket.on('change-config', (data) => {
+        console.log(`🎛️ Mudança de config: ${data.type} = ${data.value}`);
+        socket.to(data.roomId).emit('change-config', data);
+    });
+
     socket.on('disconnect', () => {
         console.log('❌ Cliente desconectado:', socket.id);
     });
