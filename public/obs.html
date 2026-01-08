@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Source</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 16px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Aguardando conexão...</div>
+    <video id="remoteVideo" autoplay playsinline></video>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+        const statusDiv = document.getElementById('status');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+
+        if (!roomId) {
+            statusDiv.textContent = '❌ Erro: Adicione ?room=SEUID na URL';
+            statusDiv.style.color = '#f00';
+        } else {
+            statusDiv.textContent = `🔄 Conectando à sala: ${roomId}`;
+            
+            const socket = io();
+            let peerConnection;
+
+            const config = {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            };
+
+            socket.on('connect', () => {
+                console.log('Socket conectado');
+                statusDiv.textContent = `📡 Sala: ${roomId} - Aguardando mobile...`;
+                socket.emit('join-room', roomId);
+            });
+
+            socket.on('offer', async (data) => {
+                console.log('Offer recebida');
+                statusDiv.textContent = '📥 Recebendo vídeo...';
+                
+                peerConnection = new RTCPeerConnection(config);
+
+                peerConnection.ontrack = (event) => {
+                    console.log('Vídeo recebido!');
+                    remoteVideo.srcObject = event.streams[0];
+                    statusDiv.textContent = '✅ Transmitindo';
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                    }, 3000);
+                };
+
+                peerConnection.onicecandidate = (e) => {
+                    if (e.candidate) {
+                        socket.emit('ice-candidate', { roomId, candidate: e.candidate });
+                    }
+                };
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.emit('answer', { roomId, answer });
+            });
+
+            socket.on('ice-candidate', async (data) => {
+                if (data.candidate && peerConnection) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                }
+            });
+
+            socket.on('disconnect', () => {
+                statusDiv.textContent = '❌ Desconectado';
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#f00';
+            });
+        }
+    </script>
+</body>
+</html>
