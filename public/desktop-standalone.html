@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Remote Pro - Desktop</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 32px; }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        .video-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+            background: #000;
+            border: 3px solid #667eea;
+            margin-bottom: 15px;
+        }
+        .controls-panel {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        .connection-box {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .control-group {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .control-value {
+            color: #0f0;
+            font-size: 18px;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 5px;
+        }
+        .console {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖥️ CAMERA REMOTE PRO - DESKTOP</h1>
+    </div>
+
+    <div class="main-grid">
+        <div class="video-section">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="console" id="console"></div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="connection-box">
+                <label style="font-weight:bold; margin-bottom:10px; display:block;">ID do Celular:</label>
+                <input type="text" id="mobileId" placeholder="Digite o ID do celular">
+                <button id="connectBtn">🚀 CONECTAR</button>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>🔍 ZOOM</span>
+                    <span class="control-value" id="zoomValue">1.0x</span>
+                </div>
+                <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>📷 ISO</span>
+                    <span class="control-value" id="isoValue">100</span>
+                </div>
+                <input type="range" id="isoSlider" min="100" max="3200" step="100" value="100">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>☀️ EXPOSIÇÃO</span>
+                    <span class="control-value" id="exposureValue">0.0</span>
+                </div>
+                <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+        const connectBtn = document.getElementById('connectBtn');
+        const mobileIdInput = document.getElementById('mobileId');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const isoSlider = document.getElementById('isoSlider');
+        const exposureSlider = document.getElementById('exposureSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const isoValue = document.getElementById('isoValue');
+        const exposureValue = document.getElementById('exposureValue');
+        const consoleDiv = document.getElementById('console');
+
+        let peer, dataConnection, mediaConnection;
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        const desktopId = 'desktop-' + Math.random().toString(36).substr(2, 9);
+        peer = new Peer(desktopId, {
+            host: 'peerjs-server.herokuapp.com',
+            secure: true,
+            port: 443
+        });
+
+        peer.on('open', (id) => {
+            log('✅ Desktop pronto: ' + id);
+        });
+
+        connectBtn.onclick = () => {
+            const mobileId = mobileIdInput.value.trim();
+            if (!mobileId) {
+                alert('Digite o ID do celular!');
+                return;
+            }
+
+            log('📞 Conectando ao celular...');
+
+            dataConnection = peer.connect(mobileId);
+            
+            dataConnection.on('open', () => {
+                log('✅ DataChannel aberto!');
+            });
+
+            mediaConnection = peer.call(mobileId, new MediaStream());
+            
+            mediaConnection.on('stream', (stream) => {
+                log('📺 VÍDEO RECEBIDO!');
+                remoteVideo.srcObject = stream;
+            });
+        };
+
+        function sendCommand(control, value) {
+            if (dataConnection && dataConnection.open) {
+                dataConnection.send({ control, value });
+            }
+        }
+
+        let lastZoomSent = 0;
+        zoomSlider.addEventListener('input', function() {
+            const value = zoomSlider.value;
+            zoomValue.textContent = parseFloat(value).toFixed(1) + 'x';
+            
+            const now = Date.now();
+            if (now - lastZoomSent > 100) {
+                sendCommand('zoom', value);
+                lastZoomSent = now;
+            }
+        });
+
+        isoSlider.addEventListener('input', function() {
+            const value = isoSlider.value;
+            isoValue.textContent = value;
+            sendCommand('iso', value);
+        });
+
+        exposureSlider.addEventListener('input', function() {
+            const value = exposureSlider.value;
+            exposureValue.textContent = parseFloat(value).toFixed(1);
+            sendCommand('exposure', value);
+        });
+    </script>
+</body>
+</html>

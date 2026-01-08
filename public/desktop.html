@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop - Monitor Pro</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 32px; margin-bottom: 5px; }
+        .subtitle { opacity: 0.9; font-size: 14px; }
+        
+        .controls-status {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 18px;
+            background: #4CAF50;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        
+        .video-section {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #333;
+        }
+        
+        video {
+            width: 100%;
+            border-radius: 10px;
+            background: #000;
+            border: 3px solid #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-box {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0f0;
+        }
+        
+        .controls-panel {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #333;
+        }
+        
+        .connection-box {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover { transform: scale(1.02); }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .status-disconnected { background: #f44336; }
+        .status-connected { background: #4CAF50; }
+        .status-connecting { background: #ff9800; }
+        
+        .control-group {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .control-value {
+            color: #0f0;
+            font-size: 18px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .console {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖥️ DESKTOP - MONITOR PROFISSIONAL</h1>
+        <div class="subtitle">Controle Remoto de Câmera WebRTC em Tempo Real</div>
+    </div>
+
+    <div class="controls-status">
+        ✅ Zoom Otimizado - Sem Tela Preta
+    </div>
+
+    <div class="main-grid">
+        <div class="video-section">
+            <video id="remoteVideo" autoplay playsinline></video>
+            
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <div class="stat-label">RESOLUÇÃO</div>
+                    <div class="stat-value" id="resolutionStat">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">FPS</div>
+                    <div class="stat-value" id="fpsStat">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">BITRATE</div>
+                    <div class="stat-value" id="bitrateStat">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">LATÊNCIA</div>
+                    <div class="stat-value" id="latencyStat">-</div>
+                </div>
+            </div>
+
+            <div class="console" id="console"></div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="connection-box">
+                <label style="font-weight:bold; margin-bottom:10px; display:block;">ID da Sala:</label>
+                <input type="text" id="roomId" placeholder="Digite o ID da sala">
+                <button id="connectBtn">🚀 CONECTAR</button>
+                <div class="status-badge status-disconnected" id="statusBadge">DESCONECTADO</div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>🔍 ZOOM</span>
+                    <span class="control-value" id="zoomValue">1.0x</span>
+                </div>
+                <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>📷 ISO</span>
+                    <span class="control-value" id="isoValue">100</span>
+                </div>
+                <input type="range" id="isoSlider" min="100" max="3200" step="100" value="100">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>☀️ EXPOSIÇÃO</span>
+                    <span class="control-value" id="exposureValue">0.0</span>
+                </div>
+                <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+        const statusBadge = document.getElementById('statusBadge');
+        const connectBtn = document.getElementById('connectBtn');
+        const roomIdInput = document.getElementById('roomId');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const isoSlider = document.getElementById('isoSlider');
+        const exposureSlider = document.getElementById('exposureSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const isoValue = document.getElementById('isoValue');
+        const exposureValue = document.getElementById('exposureValue');
+        const consoleDiv = document.getElementById('console');
+        const resolutionStat = document.getElementById('resolutionStat');
+        const fpsStat = document.getElementById('fpsStat');
+        const bitrateStat = document.getElementById('bitrateStat');
+        const latencyStat = document.getElementById('latencyStat');
+
+        let socket, peerConnection, roomId;
+        let statsInterval;
+
+        const config = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+            iceTransportPolicy: 'all',
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require'
+        };
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(status, className) {
+            statusBadge.textContent = status;
+            statusBadge.className = `status-badge ${className}`;
+        }
+
+        function sendCommand(control, value) {
+            if (socket && socket.connected) {
+                socket.emit('camera-control', { roomId, control, value });
+            }
+        }
+
+        function startStatsMonitor() {
+            if (statsInterval) clearInterval(statsInterval);
+            
+            statsInterval = setInterval(async () => {
+                if (!peerConnection) return;
+
+                const stats = await peerConnection.getStats();
+                stats.forEach(report => {
+                    if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                        if (report.framesPerSecond) {
+                            fpsStat.textContent = Math.round(report.framesPerSecond);
+                        }
+                        if (report.frameWidth && report.frameHeight) {
+                            resolutionStat.textContent = `${report.frameWidth}x${report.frameHeight}`;
+                        }
+                        if (report.bytesReceived && report.timestamp) {
+                            const kbps = Math.round((report.bytesReceived * 8) / 1000);
+                            bitrateStat.textContent = (kbps / 1000).toFixed(1) + 'M';
+                        }
+                    }
+                    if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+                        if (report.currentRoundTripTime) {
+                            latencyStat.textContent = Math.round(report.currentRoundTripTime * 1000) + 'ms';
+                        }
+                    }
+                });
+            }, 1000);
+        }
+
+        connectBtn.addEventListener('click', function() {
+            roomId = roomIdInput.value.trim();
+            if (!roomId) {
+                alert('⚠️ Digite um ID de sala!');
+                return;
+            }
+
+            log('🚀 Conectando...');
+            updateStatus('CONECTANDO...', 'status-connecting');
+
+            socket = io();
+
+            socket.on('connect', function() {
+                log('✅ Socket conectado');
+                socket.emit('join-room', roomId);
+                initPeer();
+            });
+
+            socket.on('offer', async function(data) {
+                log('📥 OFFER recebida');
+                try {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('answer', { roomId, answer });
+                    log('📤 ANSWER enviada');
+                } catch (error) {
+                    log('❌ Erro: ' + error.message);
+                }
+            });
+
+            socket.on('ice-candidate', async function(data) {
+                if (data.candidate) {
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    } catch (error) {
+                        log('❌ Erro ICE: ' + error.message);
+                    }
+                }
+            });
+
+            socket.on('disconnect', function() {
+                log('❌ Desconectado');
+                updateStatus('DESCONECTADO', 'status-disconnected');
+                if (statsInterval) clearInterval(statsInterval);
+            });
+        });
+
+        function initPeer() {
+            peerConnection = new RTCPeerConnection(config);
+
+            peerConnection.ontrack = function(event) {
+                log('📺 STREAM RECEBIDO!');
+                remoteVideo.srcObject = event.streams[0];
+                updateStatus('TRANSMITINDO', 'status-connected');
+                
+                const stream = event.streams[0];
+                const videoTrack = stream.getVideoTracks()[0];
+                const settings = videoTrack.getSettings();
+                log(`📹 Vídeo: ${settings.width}x${settings.height} @ ${settings.frameRate}fps`);
+                
+                startStatsMonitor();
+            };
+
+            peerConnection.onicecandidate = function(event) {
+                if (event.candidate) {
+                    socket.emit('ice-candidate', { roomId, candidate: event.candidate });
+                }
+            };
+
+            peerConnection.onconnectionstatechange = function() {
+                const state = peerConnection.connectionState;
+                log('🔗 Estado: ' + state);
+                
+                if (state === 'connected') {
+                    log('🎉 CONEXÃO P2P OK!');
+                    log('✅ Zoom otimizado ativo!');
+                } else if (state === 'failed' || state === 'disconnected') {
+                    updateStatus('DESCONECTADO', 'status-disconnected');
+                }
+            };
+
+            log('⏳ Aguardando mobile...');
+        }
+
+        // ✅ THROTTLING INTELIGENTE - REDUZ TELA PRETA
+        let lastZoomSent = 0;
+        let zoomDebounce = null;
+
+        zoomSlider.addEventListener('input', function() {
+            const value = zoomSlider.value;
+            zoomValue.textContent = parseFloat(value).toFixed(1) + 'x';
+            
+            // Envia de forma controlada (a cada 100ms)
+            const now = Date.now();
+            if (now - lastZoomSent > 100) {
+                sendCommand('zoom', value);
+                lastZoomSent = now;
+            }
+            
+            // Garantir que o último valor seja enviado
+            clearTimeout(zoomDebounce);
+            zoomDebounce = setTimeout(() => {
+                sendCommand('zoom', value);
+            }, 150);
+        });
+
+        isoSlider.addEventListener('input', function() {
+            const value = isoSlider.value;
+            isoValue.textContent = value;
+            sendCommand('iso', value);
+        });
+
+        exposureSlider.addEventListener('input', function() {
+            const value = exposureSlider.value;
+            exposureValue.textContent = parseFloat(value).toFixed(1);
+            sendCommand('exposure', value);
+        });
+    </script>
+</body>
+</html>

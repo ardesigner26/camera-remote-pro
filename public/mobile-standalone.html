@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Remote Pro - Mobile</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+        .status-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .status-value {
+            color: #0f0;
+            font-weight: bold;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+            border: 3px solid #0f0;
+            margin-bottom: 20px;
+            background: #000;
+        }
+        .config-section {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .config-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        select, input[type="text"], button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        select, input[type="text"] {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        .peer-id-display {
+            background: #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 CAMERA REMOTE PRO</h1>
+        
+        <div class="peer-id-display" id="peerIdDisplay">
+            Gerando ID...
+        </div>
+
+        <div class="status-panel">
+            <div class="status-row">
+                <span>Status:</span>
+                <span class="status-value" id="status">Aguardando</span>
+            </div>
+            <div class="status-row">
+                <span>Resolução:</span>
+                <span class="status-value" id="currentResolution">-</span>
+            </div>
+            <div class="status-row">
+                <span>FPS:</span>
+                <span class="status-value" id="currentFps">-</span>
+            </div>
+        </div>
+
+        <video id="video" autoplay playsinline muted></video>
+
+        <div class="config-section">
+            <div class="config-title">📹 RESOLUÇÃO</div>
+            <select id="resolutionSelect">
+                <option value="1280x720">HD 720p</option>
+                <option value="1920x1080" selected>Full HD 1080p</option>
+                <option value="2560x1440">2K QHD</option>
+                <option value="3840x2160">4K UHD</option>
+            </select>
+        </div>
+
+        <div class="config-section">
+            <div class="config-title">🎬 FPS</div>
+            <select id="fpsSelect">
+                <option value="24">24 FPS</option>
+                <option value="30" selected>30 FPS</option>
+                <option value="60">60 FPS</option>
+            </select>
+        </div>
+        
+        <button id="startBtn">🚀 INICIAR CÂMERA</button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const startBtn = document.getElementById('startBtn');
+        const statusSpan = document.getElementById('status');
+        const peerIdDisplay = document.getElementById('peerIdDisplay');
+        const logDiv = document.getElementById('log');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const fpsSelect = document.getElementById('fpsSelect');
+        const currentResolution = document.getElementById('currentResolution');
+        const currentFps = document.getElementById('currentFps');
+
+        let peer, localStream, videoTrack, currentCall;
+
+        function log(msg) {
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(text) {
+            statusSpan.textContent = text;
+        }
+
+        // Inicializar PeerJS
+        const peerId = 'camera-' + Math.random().toString(36).substr(2, 9);
+        peer = new Peer(peerId, {
+            host: 'peerjs-server.herokuapp.com',
+            secure: true,
+            port: 443
+        });
+
+        peer.on('open', (id) => {
+            log('✅ Peer conectado: ' + id);
+            peerIdDisplay.textContent = '🆔 Seu ID: ' + id;
+            updateStatus('Pronto');
+        });
+
+        peer.on('connection', (conn) => {
+            log('📡 Desktop conectado!');
+            
+            conn.on('data', (data) => {
+                log(`📡 Comando: ${data.control} = ${data.value}`);
+                applyCommand(data);
+            });
+        });
+
+        peer.on('call', (call) => {
+            log('📞 Recebendo chamada...');
+            
+            if (localStream) {
+                call.answer(localStream);
+                currentCall = call;
+                log('✅ Transmitindo!');
+                updateStatus('Transmitindo');
+            }
+        });
+
+        async function startCamera() {
+            const [width, height] = resolutionSelect.value.split('x').map(Number);
+            const fps = parseInt(fpsSelect.value);
+
+            try {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: width },
+                        height: { ideal: height },
+                        frameRate: { ideal: fps }
+                    },
+                    audio: false
+                };
+
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = localStream;
+                videoTrack = localStream.getVideoTracks()[0];
+
+                const settings = videoTrack.getSettings();
+                currentResolution.textContent = `${settings.width}x${settings.height}`;
+                currentFps.textContent = settings.frameRate + ' fps';
+
+                log(`✅ Câmera: ${settings.width}x${settings.height} @ ${settings.frameRate}fps`);
+                
+                const capabilities = videoTrack.getCapabilities();
+                if (capabilities.zoom) {
+                    log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}-${capabilities.zoom.max.toFixed(1)}`);
+                }
+
+                updateStatus('Câmera OK - Aguardando Desktop');
+
+            } catch (e) {
+                log('❌ Erro: ' + e.message);
+            }
+        }
+
+        startBtn.onclick = async () => {
+            startBtn.disabled = true;
+            await startCamera();
+        };
+
+        function applyCommand(data) {
+            if (!videoTrack) return;
+
+            const capabilities = videoTrack.getCapabilities();
+
+            if (data.control === 'zoom' && capabilities.zoom) {
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ zoom: clamped }]
+                }).catch(() => {});
+            }
+
+            if (data.control === 'iso' && capabilities.iso) {
+                const val = parseInt(data.value);
+                const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ iso: clamped }]
+                }).then(() => log(`✅ ISO: ${clamped}`)).catch(() => {});
+            }
+
+            if (data.control === 'exposure' && capabilities.exposureCompensation) {
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ exposureCompensation: clamped }]
+                }).then(() => log(`✅ Exposição: ${clamped.toFixed(1)}`)).catch(() => {});
+            }
+        }
+
+        // PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(() => log('✅ PWA instalado'))
+                .catch(() => {});
+        }
+    </script>
+</body>
+</html>
