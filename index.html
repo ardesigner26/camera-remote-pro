@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Remote Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+            background: rgba(0,0,0,0.8);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        a {
+            display: block;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        a:hover {
+            transform: scale(1.05);
+        }
+        .mobile { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); }
+        .desktop { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📹 Camera Remote Pro</h1>
+        <p>Controle profissional de câmera via WebRTC</p>
+        
+        <div class="buttons">
+            <a href="/public/mobile-standalone.html" class="mobile">
+                📱 MOBILE<br>
+                <small style="font-size: 14px; opacity: 0.8;">Abrir no Celular</small>
+            </a>
+            
+            <a href="/public/desktop-standalone.html" class="desktop">
+                🖥️ DESKTOP<br>
+                <small style="font-size: 14px; opacity: 0.8;">Abrir no Computador</small>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
