@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Remote Pro - Advanced Mobile</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        h1 { text-align: center; margin-bottom: 10px; font-size: 24px; }
+        .subtitle {
+            text-align: center;
+            color: #0f0;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .status-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .status-value {
+            color: #0f0;
+            font-weight: bold;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+            border: 3px solid #0f0;
+            margin-bottom: 20px;
+            background: #000;
+        }
+        .config-section {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .config-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        select, input[type="text"], button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        select, input[type="text"] {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 15px;
+        }
+        button:disabled {
+            background: #555;
+            opacity: 0.5;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        .zoom-display {
+            background: rgba(102, 126, 234, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .remote-control-badge {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 CAMERA REMOTE PRO</h1>
+        <div class="subtitle">🎛️ MODO AVANÇADO - Controle Remoto Ativo</div>
+        
+        <div class="remote-control-badge">
+            ✅ Desktop pode controlar TODAS as configurações remotamente
+        </div>
+
+        <div class="status-panel">
+            <div class="status-row">
+                <span>Status:</span>
+                <span class="status-value" id="status">Desconectado</span>
+            </div>
+            <div class="status-row">
+                <span>Resolução:</span>
+                <span class="status-value" id="currentResolution">-</span>
+            </div>
+            <div class="status-row">
+                <span>FPS:</span>
+                <span class="status-value" id="currentFps">-</span>
+            </div>
+            <div class="status-row">
+                <span>Bitrate:</span>
+                <span class="status-value" id="currentBitrate">-</span>
+            </div>
+        </div>
+
+        <div class="zoom-display" id="zoomDisplay">
+            Zoom: 1.0x
+        </div>
+
+        <video id="video" autoplay playsinline muted></video>
+
+        <div class="config-section">
+            <div class="config-title">📹 RESOLUÇÃO</div>
+            <select id="resolutionSelect">
+                <option value="1280x720">HD 720p (1280x720)</option>
+                <option value="1920x1080" selected>Full HD 1080p (1920x1080)</option>
+                <option value="2560x1440">2K QHD (2560x1440)</option>
+                <option value="3840x2160">4K UHD (3840x2160)</option>
+            </select>
+        </div>
+
+        <div class="config-section">
+            <div class="config-title">📊 BITRATE</div>
+            <select id="bitrateSelect">
+                <option value="5000000">5 Mbps (Economia)</option>
+                <option value="10000000">10 Mbps (Balanceado)</option>
+                <option value="15000000" selected>15 Mbps (Alta)</option>
+                <option value="20000000">20 Mbps (Muito Alta)</option>
+                <option value="30000000">30 Mbps (Ultra)</option>
+                <option value="50000000">50 Mbps (Máxima - 4K)</option>
+            </select>
+        </div>
+
+        <div class="config-section">
+            <div class="config-title">🎬 FPS</div>
+            <select id="fpsSelect">
+                <option value="24">24 FPS (Cinema)</option>
+                <option value="30" selected>30 FPS (Padrão)</option>
+                <option value="60">60 FPS (Suave)</option>
+            </select>
+        </div>
+
+        <label>ID da Sala:</label>
+        <input type="text" id="roomId" placeholder="Digite o ID da sala">
+        
+        <button id="startBtn">🚀 INICIAR CÂMERA</button>
+        <button id="restartBtn" style="display:none; background:#f44336;">🔄 REINICIAR CÂMERA</button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const roomIdInput = document.getElementById('roomId');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const bitrateSelect = document.getElementById('bitrateSelect');
+        const fpsSelect = document.getElementById('fpsSelect');
+        const statusSpan = document.getElementById('status');
+        const currentResolution = document.getElementById('currentResolution');
+        const currentFps = document.getElementById('currentFps');
+        const currentBitrate = document.getElementById('currentBitrate');
+        const zoomDisplay = document.getElementById('zoomDisplay');
+        const logDiv = document.getElementById('log');
+
+        let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
+
+        const config = { 
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ],
+            iceTransportPolicy: 'all',
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require'
+        };
+
+        function log(msg) {
+            console.log(msg);
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(text) {
+            statusSpan.textContent = text;
+        }
+
+        async function startCamera() {
+            const [width, height] = resolutionSelect.value.split('x').map(Number);
+            const fps = parseInt(fpsSelect.value);
+            const bitrate = parseInt(bitrateSelect.value);
+
+            log(`📹 Iniciando: ${width}x${height} @ ${fps}fps, ${(bitrate/1000000).toFixed(0)} Mbps`);
+            updateStatus('Iniciando câmera...');
+
+            try {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: width },
+                        height: { ideal: height },
+                        frameRate: { ideal: fps }
+                    },
+                    audio: false
+                };
+
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = localStream;
+                videoTrack = localStream.getVideoTracks()[0];
+
+                const settings = videoTrack.getSettings();
+                const actualRes = `${settings.width}x${settings.height}`;
+                const actualFps = settings.frameRate;
+
+                currentResolution.textContent = actualRes;
+                currentFps.textContent = actualFps + ' fps';
+                currentBitrate.textContent = (bitrate/1000000).toFixed(0) + ' Mbps';
+
+                log(`✅ Câmera: ${actualRes} @ ${actualFps}fps`);
+                
+                const capabilities = videoTrack.getCapabilities();
+                if (capabilities.zoom) {
+                    log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}-${capabilities.zoom.max.toFixed(1)}`);
+                }
+
+                updateStatus('Câmera OK');
+                return true;
+
+            } catch (e) {
+                log('❌ Erro câmera: ' + e.message);
+                updateStatus('Erro na câmera');
+                return false;
+            }
+        }
+
+        async function setupPeerConnection() {
+            peerConnection = new RTCPeerConnection(config);
+
+            videoTrack = localStream.getVideoTracks()[0];
+            videoSender = peerConnection.addTrack(videoTrack, localStream);
+
+            await applyEncoderSettings();
+
+            peerConnection.onicecandidate = (e) => {
+                if (e.candidate) {
+                    socket.emit('ice-candidate', { roomId, candidate: e.candidate });
+                }
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                log('🔗 Conexão: ' + peerConnection.connectionState);
+                if (peerConnection.connectionState === 'connected') {
+                    updateStatus('Transmitindo');
+                }
+            };
+
+            log('✅ PeerConnection configurado');
+        }
+
+        async function applyEncoderSettings() {
+            const bitrate = parseInt(bitrateSelect.value);
+            const fps = parseInt(fpsSelect.value);
+
+            const parameters = videoSender.getParameters();
+            if (!parameters.encodings) {
+                parameters.encodings = [{}];
+            }
+
+            parameters.encodings[0].maxBitrate = bitrate;
+            parameters.encodings[0].maxFramerate = fps;
+            parameters.encodings[0].priority = 'high';
+            parameters.encodings[0].networkPriority = 'high';
+
+            await videoSender.setParameters(parameters);
+            log(`⚙️ Encoder: ${(bitrate/1000000)}Mbps, ${fps}fps`);
+        }
+
+        startBtn.onclick = async () => {
+            roomId = roomIdInput.value.trim();
+            if (!roomId) return alert('⚠️ Digite um ID!');
+
+            startBtn.disabled = true;
+            const success = await startCamera();
+            if (!success) {
+                startBtn.disabled = false;
+                return;
+            }
+
+            socket = io();
+
+            socket.on('connect', () => {
+                log('✅ Socket conectado');
+                updateStatus('Socket OK');
+                socket.emit('join-room', roomId);
+            });
+
+            socket.on('user-joined', async (userId) => {
+                log('👤 Desktop entrou: ' + userId);
+                
+                setTimeout(async () => {
+                    log('📤 Criando OFFER...');
+                    await setupPeerConnection();
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    socket.emit('offer', { roomId, offer });
+                    log('📤 OFFER enviada');
+                }, 1000);
+            });
+
+            socket.on('answer', async (data) => {
+                log('📥 ANSWER recebida');
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                updateStatus('Transmitindo');
+            });
+
+            socket.on('ice-candidate', async (data) => {
+                if (data.candidate) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                }
+            });
+
+            // CONTROLES REMOTOS
+            socket.on('camera-control', (data) => {
+                applyCommand(data);
+            });
+
+            // MUDANÇA DE CONFIGURAÇÃO REMOTA
+            socket.on('change-config', async (data) => {
+                log(`🎛️ Mudança remota: ${data.type}`);
+                
+                if (data.type === 'resolution') {
+                    resolutionSelect.value = data.value;
+                    log(`📹 Nova resolução: ${data.value}`);
+                } else if (data.type === 'bitrate') {
+                    bitrateSelect.value = data.value;
+                    log(`📊 Novo bitrate: ${(data.value/1000000)}Mbps`);
+                } else if (data.type === 'fps') {
+                    fpsSelect.value = data.value;
+                    log(`🎬 Novo FPS: ${data.value}`);
+                }
+                
+                // Reiniciar câmera com novas configurações
+                await restartCamera();
+            });
+
+            socket.on('disconnect', () => {
+                log('❌ Desconectado');
+                updateStatus('Desconectado');
+            });
+
+            restartBtn.style.display = 'block';
+            startBtn.textContent = '✅ Câmera Ativa';
+            roomIdInput.disabled = true;
+            resolutionSelect.disabled = true;
+            bitrateSelect.disabled = true;
+            fpsSelect.disabled = true;
+            log('⏳ Aguardando desktop...');
+        };
+
+        async function restartCamera() {
+            log('🔄 Reiniciando câmera...');
+            await startCamera();
+            if (videoSender && peerConnection) {
+                await videoSender.replaceTrack(localStream.getVideoTracks()[0]);
+                videoTrack = localStream.getVideoTracks()[0];
+                await applyEncoderSettings();
+                log('✅ Câmera atualizada!');
+            }
+        }
+
+        restartBtn.onclick = restartCamera;
+
+        let zoomQueue = [];
+        let isProcessingZoom = false;
+
+        async function processZoomQueue() {
+            if (isProcessingZoom || zoomQueue.length === 0) return;
+            
+            isProcessingZoom = true;
+            const zoomValue = zoomQueue[zoomQueue.length - 1];
+            zoomQueue = [];
+
+            try {
+                await videoTrack.applyConstraints({
+                    advanced: [{ zoom: zoomValue }]
+                });
+                zoomDisplay.textContent = `Zoom: ${zoomValue.toFixed(1)}x`;
+            } catch (e) {}
+            
+            isProcessingZoom = false;
+            
+            if (zoomQueue.length > 0) {
+                setTimeout(() => processZoomQueue(), 10);
+            }
+        }
+
+        function applyCommand(data) {
+            if (!videoTrack) return;
+
+            const capabilities = videoTrack.getCapabilities();
+
+            if (data.control === 'zoom' && capabilities.zoom) {
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
+                zoomQueue.push(clamped);
+                processZoomQueue();
+            }
+
+            if (data.control === 'iso' && capabilities.iso) {
+                const val = parseInt(data.value);
+                const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
+                videoTrack.applyConstraints({
+                    advanced: [{ iso: clamped }]
+                }).then(() => log(`✅ ISO: ${clamped}`)).catch(() => {});
+            }
+
+            if (data.control === 'exposure' && capabilities.exposureCompensation) {
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
+                videoTrack.applyConstraints({
+                    advanced: [{ exposureCompensation: clamped }]
+                }).then(() => log(`✅ Exposição: ${clamped.toFixed(1)}`)).catch(() => {});
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(() => log('✅ PWA instalado'))
+                .catch(() => {});
+        }
+    </script>
+</body>
+</html>
