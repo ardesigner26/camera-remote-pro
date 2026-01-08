@@ -20,6 +20,15 @@
             margin-bottom: 20px;
         }
         h1 { font-size: 32px; }
+        .instruction {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 350px;
@@ -51,13 +60,18 @@
         }
         input[type="text"] {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin-bottom: 10px;
             background: #2a2a2a;
             border: 2px solid #444;
             color: #fff;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        input[type="text"]::placeholder {
+            color: #888;
         }
         button {
             width: 100%;
@@ -137,6 +151,10 @@
         <h1>🖥️ CAMERA REMOTE PRO - DESKTOP</h1>
     </div>
 
+    <div class="instruction">
+        ℹ️ Digite o MESMO ID que você usou no celular para conectar!
+    </div>
+
     <div class="main-grid">
         <div class="video-section">
             <video id="remoteVideo" autoplay playsinline></video>
@@ -145,8 +163,8 @@
 
         <div class="controls-panel">
             <div class="connection-box">
-                <label style="font-weight:bold; margin-bottom:10px; display:block;">ID do Celular:</label>
-                <input type="text" id="mobileId" placeholder="Cole o ID do celular aqui">
+                <label style="font-weight:bold; margin-bottom:10px; display:block; text-align:center;">🆔 MESMO ID DO CELULAR:</label>
+                <input type="text" id="roomIdInput" placeholder="Digite o ID (ex: camera123)" maxlength="20">
                 <button id="connectBtn">🚀 CONECTAR</button>
                 <div class="status-badge" id="statusBadge">Desconectado</div>
             </div>
@@ -182,7 +200,7 @@
         const remoteVideo = document.getElementById('remoteVideo');
         const connectBtn = document.getElementById('connectBtn');
         const statusBadge = document.getElementById('statusBadge');
-        const mobileIdInput = document.getElementById('mobileId');
+        const roomIdInput = document.getElementById('roomIdInput');
         const zoomSlider = document.getElementById('zoomSlider');
         const isoSlider = document.getElementById('isoSlider');
         const exposureSlider = document.getElementById('exposureSlider');
@@ -191,7 +209,7 @@
         const exposureValue = document.getElementById('exposureValue');
         const consoleDiv = document.getElementById('console');
 
-        let peer, dataConnection, mediaConnection;
+        let peer, dataConnection, mediaConnection, myRoomId;
 
         function log(message) {
             const timestamp = new Date().toLocaleTimeString();
@@ -200,29 +218,30 @@
             console.log(message);
         }
 
-        log('🔄 Iniciando PeerJS...');
+        function initPeer() {
+            log('🔄 Iniciando Desktop...');
 
-        const desktopId = 'desk-' + Math.random().toString(36).substr(2, 12);
-        peer = new Peer(desktopId);
+            peer = new Peer('desktop-' + myRoomId);
 
-        peer.on('open', (id) => {
-            log('✅ Desktop pronto: ' + id);
-        });
+            peer.on('open', (id) => {
+                log('✅ Desktop pronto: ' + id);
+                connectToMobile();
+            });
 
-        peer.on('error', (err) => {
-            log('❌ Erro PeerJS: ' + err.type);
-        });
+            peer.on('error', (err) => {
+                log('❌ Erro: ' + err.type);
+                if (err.type === 'unavailable-id') {
+                    alert('⚠️ Erro de conexão. Tente novamente.');
+                    connectBtn.disabled = false;
+                    connectBtn.textContent = '🚀 CONECTAR';
+                }
+            });
+        }
 
-        connectBtn.onclick = () => {
-            const mobileId = mobileIdInput.value.trim();
-            if (!mobileId) {
-                alert('⚠️ Digite o ID do celular!');
-                return;
-            }
-
-            log('📞 Conectando ao celular: ' + mobileId);
-            connectBtn.disabled = true;
-            connectBtn.textContent = '⏳ Conectando...';
+        function connectToMobile() {
+            const mobileId = 'mobile-' + myRoomId;
+            
+            log('📞 Conectando ao mobile: ' + mobileId);
 
             dataConnection = peer.connect(mobileId);
             
@@ -235,8 +254,6 @@
 
             dataConnection.on('error', (err) => {
                 log('❌ Erro conexão: ' + err);
-                connectBtn.disabled = false;
-                connectBtn.textContent = '🚀 CONECTAR';
             });
 
             setTimeout(() => {
@@ -252,13 +269,34 @@
                     log('❌ Erro vídeo: ' + err);
                 });
             }, 1000);
+        }
+
+        connectBtn.onclick = () => {
+            const roomId = roomIdInput.value.trim();
+            
+            if (!roomId) {
+                alert('⚠️ Digite o ID!');
+                return;
+            }
+
+            if (roomId.length < 4) {
+                alert('⚠️ ID deve ter pelo menos 4 caracteres!');
+                return;
+            }
+
+            myRoomId = roomId;
+            log('🔄 ID: ' + myRoomId);
+            
+            connectBtn.disabled = true;
+            connectBtn.textContent = '⏳ Conectando...';
+            roomIdInput.disabled = true;
+
+            initPeer();
         };
 
         function sendCommand(control, value) {
             if (dataConnection && dataConnection.open) {
                 dataConnection.send({ control, value });
-            } else {
-                log('⚠️ Não conectado ao celular');
             }
         }
 

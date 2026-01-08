@@ -26,6 +26,32 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+        .id-input-section {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .id-input-section h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        input[type="text"]::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
         .status-panel {
             background: rgba(255,255,255,0.1);
             padding: 15px;
@@ -79,6 +105,8 @@
             color: #fff;
             font-weight: bold;
             cursor: pointer;
+            font-size: 18px;
+            padding: 15px;
         }
         button:disabled {
             background: #555;
@@ -95,20 +123,6 @@
             font-size: 11px;
             margin-top: 15px;
         }
-        .peer-id-display {
-            background: #4CAF50;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 16px;
-            font-weight: bold;
-            word-break: break-all;
-            cursor: pointer;
-        }
-        .peer-id-display:active {
-            background: #45a049;
-        }
         .zoom-display {
             background: rgba(102, 126, 234, 0.3);
             padding: 10px;
@@ -118,20 +132,35 @@
             font-size: 20px;
             font-weight: bold;
         }
+        .instruction {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
         
-        <div class="peer-id-display" id="peerIdDisplay" onclick="copyId()">
-            Gerando ID... Aguarde
+        <div class="instruction">
+            ℹ️ Digite um ID personalizado (ex: camera123)<br>
+            Use o MESMO ID no Desktop para conectar!
+        </div>
+
+        <div class="id-input-section">
+            <h3>🆔 SEU ID PERSONALIZADO</h3>
+            <input type="text" id="roomIdInput" placeholder="Digite seu ID (ex: camera123)" maxlength="20">
         </div>
 
         <div class="status-panel">
             <div class="status-row">
                 <span>Status:</span>
-                <span class="status-value" id="status">Aguardando</span>
+                <span class="status-value" id="status">Digite um ID acima</span>
             </div>
             <div class="status-row">
                 <span>Resolução:</span>
@@ -143,7 +172,7 @@
             </div>
             <div class="status-row">
                 <span>Conexão:</span>
-                <span class="status-value" id="connectionStatus">Desconectado</span>
+                <span class="status-value" id="connectionStatus">Aguardando</span>
             </div>
         </div>
 
@@ -172,7 +201,7 @@
             </select>
         </div>
         
-        <button id="startBtn">🚀 INICIAR CÂMERA</button>
+        <button id="startBtn">🚀 INICIAR CÂMERA E CONECTAR</button>
 
         <div class="log" id="log"></div>
     </div>
@@ -181,9 +210,9 @@
     <script>
         const video = document.getElementById('video');
         const startBtn = document.getElementById('startBtn');
+        const roomIdInput = document.getElementById('roomIdInput');
         const statusSpan = document.getElementById('status');
         const connectionStatus = document.getElementById('connectionStatus');
-        const peerIdDisplay = document.getElementById('peerIdDisplay');
         const zoomDisplay = document.getElementById('zoomDisplay');
         const logDiv = document.getElementById('log');
         const resolutionSelect = document.getElementById('resolutionSelect');
@@ -191,7 +220,7 @@
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
 
-        let peer, localStream, videoTrack, currentCall, myPeerId;
+        let peer, localStream, videoTrack, myRoomId;
 
         function log(msg) {
             const timestamp = new Date().toLocaleTimeString();
@@ -207,68 +236,6 @@
         function updateConnectionStatus(text) {
             connectionStatus.textContent = text;
         }
-
-        function copyId() {
-            if (myPeerId) {
-                navigator.clipboard.writeText(myPeerId).then(() => {
-                    alert('✅ ID copiado!');
-                }).catch(() => {
-                    alert('ID: ' + myPeerId);
-                });
-            }
-        }
-
-        // Inicializar PeerJS com servidor público
-        log('🔄 Iniciando PeerJS...');
-        
-        const peerId = 'cam-' + Math.random().toString(36).substr(2, 12);
-        
-        peer = new Peer(peerId);
-
-        peer.on('open', (id) => {
-            myPeerId = id;
-            log('✅ Peer conectado!');
-            peerIdDisplay.textContent = '🆔 ' + id + ' (Clique para copiar)';
-            updateStatus('Pronto - Aguardando Desktop');
-        });
-
-        peer.on('error', (err) => {
-            log('❌ Erro PeerJS: ' + err.type);
-            if (err.type === 'unavailable-id') {
-                log('🔄 Tentando novamente...');
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            }
-        });
-
-        peer.on('connection', (conn) => {
-            log('📡 Desktop conectado!');
-            updateConnectionStatus('Desktop Conectado');
-            
-            conn.on('data', (data) => {
-                applyCommand(data);
-            });
-
-            conn.on('close', () => {
-                log('❌ Desktop desconectado');
-                updateConnectionStatus('Desconectado');
-            });
-        });
-
-        peer.on('call', (call) => {
-            log('📞 Recebendo chamada...');
-            
-            if (localStream) {
-                call.answer(localStream);
-                currentCall = call;
-                log('✅ Transmitindo vídeo!');
-                updateStatus('Transmitindo');
-                updateConnectionStatus('Transmitindo');
-            } else {
-                log('⚠️ Câmera não iniciada!');
-            }
-        });
 
         async function startCamera() {
             const [width, height] = resolutionSelect.value.split('x').map(Number);
@@ -303,7 +270,7 @@
                 if (capabilities.zoom) {
                     log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}x - ${capabilities.zoom.max.toFixed(1)}x`);
                 } else {
-                    log('⚠️ Zoom não suportado neste dispositivo');
+                    log('⚠️ Zoom não suportado');
                 }
 
                 if (capabilities.iso) {
@@ -311,22 +278,96 @@
                 }
 
                 if (capabilities.exposureCompensation) {
-                    log(`✅ Exposição: ${capabilities.exposureCompensation.min} - ${capabilities.exposureCompensation.max}`);
+                    log(`✅ Exposição disponível`);
                 }
 
-                updateStatus('Câmera OK - Aguardando Desktop');
+                updateStatus('Câmera OK');
+                return true;
 
             } catch (e) {
                 log('❌ Erro câmera: ' + e.message);
                 alert('Erro ao acessar câmera: ' + e.message);
+                return false;
             }
         }
 
+        function initPeer() {
+            log('🔄 Iniciando conexão P2P...');
+            
+            peer = new Peer('mobile-' + myRoomId);
+
+            peer.on('open', (id) => {
+                log('✅ Conectado como: ' + id);
+                updateStatus('Aguardando Desktop conectar...');
+                updateConnectionStatus('Aguardando Desktop');
+            });
+
+            peer.on('error', (err) => {
+                log('❌ Erro: ' + err.type);
+                if (err.type === 'unavailable-id') {
+                    log('⚠️ ID já em uso! Use outro ID.');
+                    alert('⚠️ Este ID já está em uso! Digite outro ID.');
+                    startBtn.disabled = false;
+                    startBtn.textContent = '🚀 INICIAR CÂMERA E CONECTAR';
+                }
+            });
+
+            peer.on('connection', (conn) => {
+                log('📡 Desktop conectado!');
+                updateConnectionStatus('Desktop Conectado');
+                
+                conn.on('data', (data) => {
+                    applyCommand(data);
+                });
+
+                conn.on('close', () => {
+                    log('❌ Desktop desconectado');
+                    updateConnectionStatus('Desconectado');
+                });
+            });
+
+            peer.on('call', (call) => {
+                log('📞 Recebendo chamada de vídeo...');
+                
+                if (localStream) {
+                    call.answer(localStream);
+                    log('✅ Transmitindo vídeo!');
+                    updateStatus('Transmitindo');
+                    updateConnectionStatus('Transmitindo Vídeo');
+                }
+            });
+        }
+
         startBtn.onclick = async () => {
+            const roomId = roomIdInput.value.trim();
+            
+            if (!roomId) {
+                alert('⚠️ Digite um ID!');
+                return;
+            }
+
+            if (roomId.length < 4) {
+                alert('⚠️ ID deve ter pelo menos 4 caracteres!');
+                return;
+            }
+
+            myRoomId = roomId;
             startBtn.disabled = true;
             startBtn.textContent = '⏳ Iniciando...';
-            await startCamera();
+
+            log('🔄 ID escolhido: ' + myRoomId);
+
+            const cameraOk = await startCamera();
+            if (!cameraOk) {
+                startBtn.disabled = false;
+                startBtn.textContent = '🚀 INICIAR CÂMERA E CONECTAR';
+                return;
+            }
+
+            initPeer();
+            
             startBtn.textContent = '✅ Câmera Ativa';
+            roomIdInput.disabled = true;
         };
 
         function applyCommand(data) {
@@ -339,7 +380,6 @@
 
             if (data.control === 'zoom') {
                 if (!capabilities.zoom) {
-                    log('⚠️ Zoom não suportado');
                     return;
                 }
 
@@ -350,14 +390,11 @@
                 
                 videoTrack.applyConstraints({
                     advanced: [{ zoom: clamped }]
-                }).catch((e) => {
-                    log('❌ Erro zoom: ' + e.message);
-                });
+                }).catch(() => {});
             }
 
             if (data.control === 'iso') {
                 if (!capabilities.iso) {
-                    log('⚠️ ISO não suportado');
                     return;
                 }
 
@@ -368,14 +405,11 @@
                     advanced: [{ iso: clamped }]
                 }).then(() => {
                     log(`✅ ISO: ${clamped}`);
-                }).catch((e) => {
-                    log('❌ Erro ISO: ' + e.message);
-                });
+                }).catch(() => {});
             }
 
             if (data.control === 'exposure') {
                 if (!capabilities.exposureCompensation) {
-                    log('⚠️ Exposição não suportada');
                     return;
                 }
 
@@ -386,16 +420,14 @@
                     advanced: [{ exposureCompensation: clamped }]
                 }).then(() => {
                     log(`✅ Exposição: ${clamped.toFixed(1)}`);
-                }).catch((e) => {
-                    log('❌ Erro exposição: ' + e.message);
-                });
+                }).catch(() => {});
             }
         }
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js')
                 .then(() => log('✅ PWA registrado'))
-                .catch(() => log('⚠️ PWA não disponível'));
+                .catch(() => {});
         }
     </script>
 </body>
