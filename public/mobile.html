@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile - Configuração Avançada</title>
+    <title>Camera Remote Pro - Mobile</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -22,6 +27,15 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+        .controls-status {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: #4CAF50;
+            color: #fff;
+        }
         .status-panel {
             background: rgba(255,255,255,0.1);
             padding: 15px;
@@ -103,23 +117,23 @@
             font-size: 11px;
             margin-top: 15px;
         }
-        .controls-status {
+        .zoom-display {
+            background: rgba(102, 126, 234, 0.3);
             padding: 10px;
             border-radius: 8px;
             text-align: center;
-            font-weight: bold;
             margin-bottom: 15px;
-            background: #4CAF50;
-            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📱 MOBILE - CONFIGURAÇÃO PRO</h1>
+        <h1>📱 CAMERA REMOTE PRO</h1>
         
         <div class="controls-status">
-            ✅ Zoom Otimizado - Sem Tela Preta
+            ✅ Versão Node.js - Hospedada Online
         </div>
 
         <div class="status-panel">
@@ -139,6 +153,10 @@
                 <span>Bitrate:</span>
                 <span class="status-value" id="currentBitrate">-</span>
             </div>
+        </div>
+
+        <div class="zoom-display" id="zoomDisplay">
+            Zoom: 1.0x
         </div>
 
         <video id="video" autoplay playsinline muted></video>
@@ -174,16 +192,6 @@
             </select>
         </div>
 
-        <div class="config-section">
-            <div class="config-title">⚡ MODO DE LATÊNCIA</div>
-            <select id="latencyMode">
-                <option value="ultra-low" selected>Ultra-Low (Tempo Real)</option>
-                <option value="low">Low (Rápido)</option>
-                <option value="balanced">Balanced (Equilibrado)</option>
-                <option value="quality">High-Quality (Máxima Qualidade)</option>
-            </select>
-        </div>
-
         <label>ID da Sala:</label>
         <input type="text" id="roomId" placeholder="Digite o ID da sala">
         
@@ -202,17 +210,20 @@
         const resolutionSelect = document.getElementById('resolutionSelect');
         const bitrateSelect = document.getElementById('bitrateSelect');
         const fpsSelect = document.getElementById('fpsSelect');
-        const latencyMode = document.getElementById('latencyMode');
         const statusSpan = document.getElementById('status');
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
         const currentBitrate = document.getElementById('currentBitrate');
+        const zoomDisplay = document.getElementById('zoomDisplay');
         const logDiv = document.getElementById('log');
 
         let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
 
         const config = { 
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ],
             iceTransportPolicy: 'all',
             bundlePolicy: 'max-bundle',
             rtcpMuxPolicy: 'require'
@@ -270,12 +281,6 @@
                 if (capabilities.zoom) {
                     log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}-${capabilities.zoom.max.toFixed(1)}`);
                 }
-                if (capabilities.iso) {
-                    log(`✅ ISO: ${capabilities.iso.min}-${capabilities.iso.max}`);
-                }
-                if (capabilities.exposureCompensation) {
-                    log(`✅ Exposição: ${capabilities.exposureCompensation.min}-${capabilities.exposureCompensation.max}`);
-                }
 
                 updateStatus('Câmera OK');
                 return true;
@@ -314,7 +319,6 @@
         async function applyEncoderSettings() {
             const bitrate = parseInt(bitrateSelect.value);
             const fps = parseInt(fpsSelect.value);
-            const mode = latencyMode.value;
 
             const parameters = videoSender.getParameters();
             if (!parameters.encodings) {
@@ -323,11 +327,8 @@
 
             parameters.encodings[0].maxBitrate = bitrate;
             parameters.encodings[0].maxFramerate = fps;
-            
-            if (mode === 'ultra-low') {
-                parameters.encodings[0].priority = 'high';
-                parameters.encodings[0].networkPriority = 'high';
-            }
+            parameters.encodings[0].priority = 'high';
+            parameters.encodings[0].networkPriority = 'high';
 
             await videoSender.setParameters(parameters);
             log(`⚙️ Encoder: ${(bitrate/1000000)}Mbps, ${fps}fps`);
@@ -391,16 +392,15 @@
         };
 
         restartBtn.onclick = async () => {
-            log('🔄 Reiniciando com novas configurações...');
+            log('🔄 Reiniciando...');
             await startCamera();
             if (videoSender && peerConnection) {
                 await videoSender.replaceTrack(localStream.getVideoTracks()[0]);
                 await applyEncoderSettings();
-                log('✅ Configurações atualizadas!');
+                log('✅ Atualizado!');
             }
         };
 
-        // ✅ FILA DE ZOOM PARA EVITAR TELA PRETA
         let zoomQueue = [];
         let isProcessingZoom = false;
 
@@ -408,87 +408,56 @@
             if (isProcessingZoom || zoomQueue.length === 0) return;
             
             isProcessingZoom = true;
-            const zoomValue = zoomQueue[zoomQueue.length - 1]; // Pega o último valor
-            zoomQueue = []; // Limpa a fila
+            const zoomValue = zoomQueue[zoomQueue.length - 1];
+            zoomQueue = [];
 
             try {
                 await videoTrack.applyConstraints({
                     advanced: [{ zoom: zoomValue }]
                 });
-            } catch (e) {
-                // Ignora erros silenciosamente
-            }
+                zoomDisplay.textContent = `Zoom: ${zoomValue.toFixed(1)}x`;
+            } catch (e) {}
             
             isProcessingZoom = false;
             
-            // Processa próximo da fila se houver
             if (zoomQueue.length > 0) {
                 setTimeout(() => processZoomQueue(), 10);
             }
         }
 
         function applyCommand(data) {
-            if (!videoTrack) {
-                return;
-            }
+            if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
 
-            // ZOOM COM FILA - EVITA TELA PRETA
-            if (data.control === 'zoom') {
-                if (!capabilities.zoom) {
-                    log('⚠️ Zoom não suportado');
-                    return;
-                }
-
+            if (data.control === 'zoom' && capabilities.zoom) {
                 const val = parseFloat(data.value);
                 const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
-                
                 zoomQueue.push(clamped);
                 processZoomQueue();
             }
 
-            // ISO
-            if (data.control === 'iso') {
-                if (!capabilities.iso) {
-                    log('⚠️ ISO não suportado');
-                    return;
-                }
-
+            if (data.control === 'iso' && capabilities.iso) {
                 const val = parseInt(data.value);
                 const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
-
                 videoTrack.applyConstraints({
                     advanced: [{ iso: clamped }]
-                })
-                .then(() => {
-                    log(`✅ ISO: ${clamped}`);
-                })
-                .catch(e => {
-                    log('❌ Erro ISO: ' + e.message);
-                });
+                }).then(() => log(`✅ ISO: ${clamped}`)).catch(() => {});
             }
 
-            // EXPOSIÇÃO
-            if (data.control === 'exposure') {
-                if (!capabilities.exposureCompensation) {
-                    log('⚠️ Exposição não suportada');
-                    return;
-                }
-
+            if (data.control === 'exposure' && capabilities.exposureCompensation) {
                 const val = parseFloat(data.value);
                 const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
-
                 videoTrack.applyConstraints({
                     advanced: [{ exposureCompensation: clamped }]
-                })
-                .then(() => {
-                    log(`✅ Exposição: ${clamped.toFixed(1)}`);
-                })
-                .catch(e => {
-                    log('❌ Erro exposição: ' + e.message);
-                });
+                }).then(() => log(`✅ Exposição: ${clamped.toFixed(1)}`)).catch(() => {});
             }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(() => log('✅ PWA instalado'))
+                .catch(() => {});
         }
     </script>
 </body>
