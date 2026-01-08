@@ -27,7 +27,7 @@
         }
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 420px;
+            grid-template-columns: 1fr 400px;
             gap: 20px;
         }
         .video-section {
@@ -84,19 +84,6 @@
         }
         button.update {
             background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-            font-size: 14px;
-            padding: 12px;
-        }
-        button.preset {
-            background: rgba(102, 126, 234, 0.3);
-            border: 2px solid #667eea;
-            padding: 12px;
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-        button.preset.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: 2px solid #fff;
         }
         .section-title {
             font-size: 18px;
@@ -170,18 +157,6 @@
         .status-badge.connected {
             background: #4CAF50;
         }
-        .latency-info {
-            background: rgba(255, 193, 7, 0.2);
-            border: 2px solid #FFC107;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 13px;
-            text-align: center;
-        }
-        #customConfigGroup {
-            display: none;
-        }
         @media (max-width: 1024px) {
             .main-grid { grid-template-columns: 1fr; }
         }
@@ -190,7 +165,7 @@
 <body>
     <div class="header">
         <h1>🖥️ CAMERA REMOTE PRO</h1>
-        <div class="subtitle">⏱️ CONTROLE DE LATÊNCIA ULTRA BAIXA - Transmissão de Culto</div>
+        <div class="subtitle">🎛️ CONTROLE AVANÇADO TOTAL - Desktop</div>
     </div>
 
     <div class="main-grid">
@@ -207,56 +182,58 @@
                 <div class="status-badge" id="statusBadge">Desconectado</div>
             </div>
 
-            <div class="section-title">⏱️ PRESETS DE LATÊNCIA</div>
+            <div class="section-title">📹 CONFIGURAÇÕES DE VÍDEO (Controle Remoto)</div>
 
-            <div class="latency-info" id="latencyInfo">
-                Selecione um preset para sincronizar com áudio externo
+            <div class="control-group">
+                <div class="control-label">
+                    <span>📐 RESOLUÇÃO</span>
+                </div>
+                <select id="resolutionSelect">
+                    <option value="1280x720">HD 720p (1280x720)</option>
+                    <option value="1920x1080" selected>Full HD 1080p (1920x1080)</option>
+                    <option value="2560x1440">2K QHD (2560x1440)</option>
+                    <option value="3840x2160">4K UHD (3840x2160)</option>
+                </select>
+                <button class="update" id="updateResolutionBtn" disabled>🔄 APLICAR RESOLUÇÃO NO CELULAR</button>
             </div>
 
-            <button class="preset" id="ultraLowBtn">🚀 ULTRA BAIXA<br>(100-150ms)</button>
-            <button class="preset" id="lowBtn">⚡ BAIXA<br>(150-250ms)</button>
-            <button class="preset" id="mediumBtn">⚖️ MÉDIA<br>(250-350ms)</button>
-            <button class="preset" id="moreOrLessBtn">📊 MAIS OU MENOS<br>(350-450ms)</button>
-
-            <div id="customConfigGroup">
-                <div class="section-title">⚙️ CONFIGURAÇÃO CUSTOMIZADA</div>
-
-                <div class="control-group">
-                    <label>Resolução:</label>
-                    <select id="resolutionSelect">
-                        <option value="1280x720">HD 720p (1280x720)</option>
-                        <option value="1920x1080">Full HD 1080p (1920x1080)</option>
-                        <option value="2560x1440">2K QHD (2560x1440)</option>
-                        <option value="3840x2160">4K UHD (3840x2160)</option>
-                    </select>
+            <div class="control-group">
+                <div class="control-label">
+                    <span>📊 BITRATE</span>
                 </div>
-
-                <div class="control-group">
-                    <label>Bitrate:</label>
-                    <select id="bitrateSelect">
-                        <option value="2000000">2 Mbps</option>
-                        <option value="5000000">5 Mbps</option>
-                        <option value="10000000">10 Mbps</option>
-                        <option value="15000000">15 Mbps</option>
-                        <option value="20000000">20 Mbps</option>
-                        <option value="30000000">30 Mbps</option>
-                        <option value="50000000">50 Mbps</option>
-                    </select>
-                </div>
-
-                <div class="control-group">
-                    <label>FPS:</label>
-                    <select id="fpsSelect">
-                        <option value="15">15 FPS</option>
-                        <option value="20">20 FPS</option>
-                        <option value="24">24 FPS</option>
-                        <option value="30">30 FPS</option>
-                        <option value="60">60 FPS</option>
-                    </select>
-                </div>
+                <select id="bitrateSelect">
+                    <option value="5000000">5 Mbps (Economia - Baixa Latência)</option>
+                    <option value="10000000">10 Mbps (Balanceado)</option>
+                    <option value="15000000" selected>15 Mbps (Alta Qualidade)</option>
+                    <option value="20000000">20 Mbps (Muito Alta)</option>
+                    <option value="30000000">30 Mbps (Ultra - 4K)</option>
+                    <option value="50000000">50 Mbps (Máxima - 4K 60fps)</option>
+                </select>
+                <button class="update" id="updateBitrateBtn" disabled>🔄 APLICAR BITRATE NO CELULAR</button>
             </div>
 
-            <button class="update" id="applyConfigBtn" disabled>⚙️ APLICAR CONFIGURAÇÕES</button>
+            <div class="control-group">
+                <div class="control-label">
+                    <span>🎬 FPS</span>
+                </div>
+                <select id="fpsSelect">
+                    <option value="24">24 FPS (Cinema)</option>
+                    <option value="30" selected>30 FPS (Baixa Latência)</option>
+                    <option value="60">60 FPS (Suave - Alta Latência)</option>
+                </select>
+                <button class="update" id="updateFpsBtn" disabled>🔄 APLICAR FPS NO CELULAR</button>
+            </div>
+
+            <div class="section-title">⏱️ CONTROLE DE LATÊNCIA</div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>⏱️ LATÊNCIA</span>
+                    <span class="control-value" id="latencyValue">100ms</span>
+                </div>
+                <input type="range" id="latencySlider" min="50" max="500" step="10" value="100" disabled>
+                <small style="color: #999; display: block; margin-top: 8px;">Ajusta buffer de envio (sem comprimir vídeo)</small>
+            </div>
 
             <div class="section-title">🎥 CONTROLES DE CÂMERA</div>
 
@@ -292,18 +269,16 @@
         const connectBtn = document.getElementById('connectBtn');
         const statusBadge = document.getElementById('statusBadge');
         const roomIdInput = document.getElementById('roomIdInput');
-        const latencyInfo = document.getElementById('latencyInfo');
-        const customConfigGroup = document.getElementById('customConfigGroup');
-        const applyConfigBtn = document.getElementById('applyConfigBtn');
-        
-        const ultraLowBtn = document.getElementById('ultraLowBtn');
-        const lowBtn = document.getElementById('lowBtn');
-        const mediumBtn = document.getElementById('mediumBtn');
-        const moreOrLessBtn = document.getElementById('moreOrLessBtn');
         
         const resolutionSelect = document.getElementById('resolutionSelect');
         const bitrateSelect = document.getElementById('bitrateSelect');
         const fpsSelect = document.getElementById('fpsSelect');
+        const updateResolutionBtn = document.getElementById('updateResolutionBtn');
+        const updateBitrateBtn = document.getElementById('updateBitrateBtn');
+        const updateFpsBtn = document.getElementById('updateFpsBtn');
+        
+        const latencySlider = document.getElementById('latencySlider');
+        const latencyValue = document.getElementById('latencyValue');
         
         const zoomSlider = document.getElementById('zoomSlider');
         const isoSlider = document.getElementById('isoSlider');
@@ -313,7 +288,7 @@
         const exposureValue = document.getElementById('exposureValue');
         const consoleDiv = document.getElementById('console');
 
-        let socket, peerConnection, roomId, currentPreset = null;
+        let socket, peerConnection, roomId;
 
         const config = {
             iceServers: [
@@ -322,73 +297,12 @@
             ]
         };
 
-        const latencyPresets = {
-            ultraLow: {
-                resolution: '640x480',
-                bitrate: '2000000',
-                fps: '15',
-                label: '🚀 ULTRA BAIXA (100-150ms)',
-                description: '640x480 | 2 Mbps | 15 FPS'
-            },
-            low: {
-                resolution: '1280x720',
-                bitrate: '5000000',
-                fps: '20',
-                label: '⚡ BAIXA (150-250ms)',
-                description: '1280x720 | 5 Mbps | 20 FPS'
-            },
-            medium: {
-                resolution: '1920x1080',
-                bitrate: '10000000',
-                fps: '24',
-                label: '⚖️ MÉDIA (250-350ms)',
-                description: '1920x1080 | 10 Mbps | 24 FPS'
-            },
-            moreOrLess: {
-                resolution: '1920x1080',
-                bitrate: '15000000',
-                fps: '30',
-                label: '📊 MAIS OU MENOS (350-450ms)',
-                description: '1920x1080 | 15 Mbps | 30 FPS'
-            }
-        };
-
         function log(message) {
             const timestamp = new Date().toLocaleTimeString();
             consoleDiv.innerHTML += `[${timestamp}] ${message}<br>`;
             consoleDiv.scrollTop = consoleDiv.scrollHeight;
             console.log(message);
         }
-
-        function selectPreset(presetName) {
-            const preset = latencyPresets[presetName];
-            currentPreset = presetName;
-            
-            ultraLowBtn.classList.remove('active');
-            lowBtn.classList.remove('active');
-            mediumBtn.classList.remove('active');
-            moreOrLessBtn.classList.remove('active');
-            
-            if (presetName === 'ultraLow') ultraLowBtn.classList.add('active');
-            else if (presetName === 'low') lowBtn.classList.add('active');
-            else if (presetName === 'medium') mediumBtn.classList.add('active');
-            else if (presetName === 'moreOrLess') moreOrLessBtn.classList.add('active');
-            
-            customConfigGroup.style.display = 'none';
-            latencyInfo.innerHTML = `<strong>${preset.label}</strong><br>${preset.description}`;
-            
-            resolutionSelect.value = preset.resolution;
-            bitrateSelect.value = preset.bitrate;
-            fpsSelect.value = preset.fps;
-            
-            log(`📊 Preset selecionado: ${preset.label}`);
-            log(`📹 ${preset.description}`);
-        }
-
-        ultraLowBtn.onclick = () => selectPreset('ultraLow');
-        lowBtn.onclick = () => selectPreset('low');
-        mediumBtn.onclick = () => selectPreset('medium');
-        moreOrLessBtn.onclick = () => selectPreset('moreOrLess');
 
         connectBtn.onclick = () => {
             roomId = roomIdInput.value.trim();
@@ -422,7 +336,10 @@
                     statusBadge.classList.add('connected');
                     connectBtn.textContent = '✅ Conectado';
                     
-                    applyConfigBtn.disabled = false;
+                    updateResolutionBtn.disabled = false;
+                    updateBitrateBtn.disabled = false;
+                    updateFpsBtn.disabled = false;
+                    latencySlider.disabled = false;
                     zoomSlider.disabled = false;
                     isoSlider.disabled = false;
                     exposureSlider.disabled = false;
@@ -457,38 +374,45 @@
                 statusBadge.classList.remove('connected');
                 connectBtn.disabled = false;
                 connectBtn.textContent = '🚀 CONECTAR';
-                applyConfigBtn.disabled = true;
+                
+                updateResolutionBtn.disabled = true;
+                updateBitrateBtn.disabled = true;
+                updateFpsBtn.disabled = true;
+                latencySlider.disabled = true;
                 zoomSlider.disabled = true;
                 isoSlider.disabled = true;
                 exposureSlider.disabled = true;
             });
         };
 
-        applyConfigBtn.onclick = () => {
-            if (!socket || !roomId) return;
-            
-            const config = {
-                resolution: resolutionSelect.value,
-                bitrate: bitrateSelect.value,
-                fps: fpsSelect.value
-            };
-            
-            log('📤 Enviando novas configurações para o mobile...');
-            log(`📹 Resolução: ${config.resolution}`);
-            log(`📊 Bitrate: ${(config.bitrate/1000000).toFixed(1)}Mbps`);
-            log(`🎬 FPS: ${config.fps}`);
-            
-            socket.emit('change-config', { roomId, ...config });
-            
-            applyConfigBtn.textContent = '⏳ Aplicando...';
-            applyConfigBtn.disabled = true;
-            
-            setTimeout(() => {
-                applyConfigBtn.textContent = '⚙️ APLICAR CONFIGURAÇÕES';
-                applyConfigBtn.disabled = false;
-                log('✅ Configurações aplicadas no mobile!');
-            }, 3000);
+        updateResolutionBtn.onclick = () => {
+            const value = resolutionSelect.value;
+            socket.emit('change-config', { roomId, type: 'resolution', value });
+            log(`📐 Alterando resolução para: ${value}`);
+            alert(`✅ Comando enviado! O celular vai reiniciar a câmera em ${value}`);
         };
+
+        updateBitrateBtn.onclick = () => {
+            const value = bitrateSelect.value;
+            socket.emit('change-config', { roomId, type: 'bitrate', value });
+            log(`📊 Alterando bitrate para: ${(value/1000000)} Mbps`);
+            alert(`✅ Comando enviado! O celular vai aplicar bitrate de ${(value/1000000)} Mbps`);
+        };
+
+        updateFpsBtn.onclick = () => {
+            const value = fpsSelect.value;
+            socket.emit('change-config', { roomId, type: 'fps', value });
+            log(`🎬 Alterando FPS para: ${value}`);
+            alert(`✅ Comando enviado! O celular vai aplicar ${value} FPS`);
+        };
+
+        latencySlider.addEventListener('input', function() {
+            const latency = parseInt(this.value);
+            latencyValue.textContent = latency + 'ms';
+            
+            log(`⏱️ Latência: ${latency}ms (Buffer de envio ajustado)`);
+            socket.emit('latency-buffer', { roomId, bufferDelay: latency });
+        });
 
         function sendCommand(control, value) {
             if (socket && roomId) {
@@ -519,8 +443,6 @@
             exposureValue.textContent = parseFloat(value).toFixed(1);
             sendCommand('exposure', value);
         });
-
-        log('✅ Sistema pronto para conectar!');
     </script>
 </body>
 </html>

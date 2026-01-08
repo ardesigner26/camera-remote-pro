@@ -108,29 +108,12 @@
             font-size: 11px;
             margin-top: 15px;
         }
-        .remote-indicator {
-            background: rgba(255, 152, 0, 0.2);
-            border: 2px solid #FF9800;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 14px;
-            display: none;
-        }
-        .remote-indicator.active {
-            display: block;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
         <div class="subtitle">✅ Transmissão de Culto - Latência Ultra Baixa</div>
-        
-        <div class="remote-indicator" id="remoteIndicator">
-            🖥️ Desktop está controlando remotamente
-        </div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -148,6 +131,10 @@
             <div class="status-row">
                 <span>Bitrate:</span>
                 <span class="status-value" id="currentBitrate">-</span>
+            </div>
+            <div class="status-row">
+                <span>Buffer:</span>
+                <span class="status-value" id="currentBuffer">100ms</span>
             </div>
         </div>
 
@@ -210,11 +197,11 @@
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
         const currentBitrate = document.getElementById('currentBitrate');
+        const currentBuffer = document.getElementById('currentBuffer');
         const logDiv = document.getElementById('log');
-        const remoteIndicator = document.getElementById('remoteIndicator');
 
         let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
-        let isRemoteControl = false;
+        let bufferDelay = 100; // ms
 
         const config = { 
             iceServers: [
@@ -271,6 +258,7 @@
                 currentResolution.textContent = actualRes;
                 currentFps.textContent = actualFps + ' fps';
                 currentBitrate.textContent = (bitrate/1000000).toFixed(1) + ' Mbps';
+                currentBuffer.textContent = bufferDelay + 'ms';
 
                 log(`✅ Câmera: ${actualRes} @ ${actualFps}fps`);
 
@@ -388,28 +376,27 @@
 
             socket.on('change-config', async (data) => {
                 log('🖥️ Desktop solicitou mudança de configuração');
-                isRemoteControl = true;
-                remoteIndicator.classList.add('active');
                 
-                if (data.resolution) {
-                    resolutionSelect.value = data.resolution;
-                    log(`📹 Resolução alterada para: ${data.resolution}`);
+                if (data.type === 'resolution' && data.value) {
+                    resolutionSelect.value = data.value;
+                    log(`📹 Resolução alterada para: ${data.value}`);
                 }
-                if (data.bitrate) {
-                    bitrateSelect.value = data.bitrate;
-                    log(`📊 Bitrate alterado para: ${(data.bitrate/1000000).toFixed(1)}Mbps`);
+                if (data.type === 'bitrate' && data.value) {
+                    bitrateSelect.value = data.value;
+                    log(`📊 Bitrate alterado para: ${(data.value/1000000).toFixed(1)}Mbps`);
                 }
-                if (data.fps) {
-                    fpsSelect.value = data.fps;
-                    log(`🎬 FPS alterado para: ${data.fps}`);
+                if (data.type === 'fps' && data.value) {
+                    fpsSelect.value = data.value;
+                    log(`🎬 FPS alterado para: ${data.value}`);
                 }
                 
                 await restartCamera();
-                
-                setTimeout(() => {
-                    isRemoteControl = false;
-                    remoteIndicator.classList.remove('active');
-                }, 3000);
+            });
+
+            socket.on('latency-buffer', (data) => {
+                bufferDelay = data.bufferDelay;
+                currentBuffer.textContent = bufferDelay + 'ms';
+                log(`⏱️ Buffer de envio ajustado para: ${bufferDelay}ms`);
             });
 
             socket.on('disconnect', () => {
@@ -445,10 +432,8 @@
 
         [resolutionSelect, bitrateSelect, fpsSelect].forEach(select => {
             select.addEventListener('change', () => {
-                if (!isRemoteControl) {
-                    restartBtn.style.background = '#FF9800';
-                    restartBtn.textContent = '🔄 APLICAR MUDANÇAS';
-                }
+                restartBtn.style.background = '#FF9800';
+                restartBtn.textContent = '🔄 APLICAR MUDANÇAS';
             });
         });
 
