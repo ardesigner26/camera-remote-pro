@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camera Remote Pro - Mobile</title>
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
-    <link rel="apple-touch-icon" href="/icon-192.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -62,12 +61,7 @@
             margin-bottom: 10px;
             color: #667eea;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        select, input[type="text"], button {
+        select, button {
             width: 100%;
             padding: 12px;
             margin-bottom: 15px;
@@ -75,7 +69,7 @@
             border-radius: 8px;
             font-size: 16px;
         }
-        select, input[type="text"] {
+        select {
             background: rgba(255,255,255,0.1);
             color: #fff;
             border: 2px solid rgba(255,255,255,0.2);
@@ -85,6 +79,10 @@
             color: #fff;
             font-weight: bold;
             cursor: pointer;
+        }
+        button:disabled {
+            background: #555;
+            opacity: 0.5;
         }
         .log {
             background: #000;
@@ -103,7 +101,21 @@
             border-radius: 8px;
             text-align: center;
             margin-bottom: 20px;
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: bold;
+            word-break: break-all;
+            cursor: pointer;
+        }
+        .peer-id-display:active {
+            background: #45a049;
+        }
+        .zoom-display {
+            background: rgba(102, 126, 234, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 20px;
             font-weight: bold;
         }
     </style>
@@ -112,8 +124,8 @@
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
         
-        <div class="peer-id-display" id="peerIdDisplay">
-            Gerando ID...
+        <div class="peer-id-display" id="peerIdDisplay" onclick="copyId()">
+            Gerando ID... Aguarde
         </div>
 
         <div class="status-panel">
@@ -129,6 +141,14 @@
                 <span>FPS:</span>
                 <span class="status-value" id="currentFps">-</span>
             </div>
+            <div class="status-row">
+                <span>Conexão:</span>
+                <span class="status-value" id="connectionStatus">Desconectado</span>
+            </div>
+        </div>
+
+        <div class="zoom-display" id="zoomDisplay">
+            Zoom: 1.0x
         </div>
 
         <video id="video" autoplay playsinline muted></video>
@@ -157,50 +177,82 @@
         <div class="log" id="log"></div>
     </div>
 
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script>
         const video = document.getElementById('video');
         const startBtn = document.getElementById('startBtn');
         const statusSpan = document.getElementById('status');
+        const connectionStatus = document.getElementById('connectionStatus');
         const peerIdDisplay = document.getElementById('peerIdDisplay');
+        const zoomDisplay = document.getElementById('zoomDisplay');
         const logDiv = document.getElementById('log');
         const resolutionSelect = document.getElementById('resolutionSelect');
         const fpsSelect = document.getElementById('fpsSelect');
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
 
-        let peer, localStream, videoTrack, currentCall;
+        let peer, localStream, videoTrack, currentCall, myPeerId;
 
         function log(msg) {
             const timestamp = new Date().toLocaleTimeString();
             logDiv.innerHTML += `[${timestamp}] ${msg}<br>`;
             logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
         }
 
         function updateStatus(text) {
             statusSpan.textContent = text;
         }
 
-        // Inicializar PeerJS
-        const peerId = 'camera-' + Math.random().toString(36).substr(2, 9);
-        peer = new Peer(peerId, {
-            host: 'peerjs-server.herokuapp.com',
-            secure: true,
-            port: 443
-        });
+        function updateConnectionStatus(text) {
+            connectionStatus.textContent = text;
+        }
+
+        function copyId() {
+            if (myPeerId) {
+                navigator.clipboard.writeText(myPeerId).then(() => {
+                    alert('✅ ID copiado!');
+                }).catch(() => {
+                    alert('ID: ' + myPeerId);
+                });
+            }
+        }
+
+        // Inicializar PeerJS com servidor público
+        log('🔄 Iniciando PeerJS...');
+        
+        const peerId = 'cam-' + Math.random().toString(36).substr(2, 12);
+        
+        peer = new Peer(peerId);
 
         peer.on('open', (id) => {
-            log('✅ Peer conectado: ' + id);
-            peerIdDisplay.textContent = '🆔 Seu ID: ' + id;
-            updateStatus('Pronto');
+            myPeerId = id;
+            log('✅ Peer conectado!');
+            peerIdDisplay.textContent = '🆔 ' + id + ' (Clique para copiar)';
+            updateStatus('Pronto - Aguardando Desktop');
+        });
+
+        peer.on('error', (err) => {
+            log('❌ Erro PeerJS: ' + err.type);
+            if (err.type === 'unavailable-id') {
+                log('🔄 Tentando novamente...');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
         });
 
         peer.on('connection', (conn) => {
             log('📡 Desktop conectado!');
+            updateConnectionStatus('Desktop Conectado');
             
             conn.on('data', (data) => {
-                log(`📡 Comando: ${data.control} = ${data.value}`);
                 applyCommand(data);
+            });
+
+            conn.on('close', () => {
+                log('❌ Desktop desconectado');
+                updateConnectionStatus('Desconectado');
             });
         });
 
@@ -210,8 +262,11 @@
             if (localStream) {
                 call.answer(localStream);
                 currentCall = call;
-                log('✅ Transmitindo!');
+                log('✅ Transmitindo vídeo!');
                 updateStatus('Transmitindo');
+                updateConnectionStatus('Transmitindo');
+            } else {
+                log('⚠️ Câmera não iniciada!');
             }
         });
 
@@ -246,59 +301,101 @@
                 
                 const capabilities = videoTrack.getCapabilities();
                 if (capabilities.zoom) {
-                    log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}-${capabilities.zoom.max.toFixed(1)}`);
+                    log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}x - ${capabilities.zoom.max.toFixed(1)}x`);
+                } else {
+                    log('⚠️ Zoom não suportado neste dispositivo');
+                }
+
+                if (capabilities.iso) {
+                    log(`✅ ISO: ${capabilities.iso.min} - ${capabilities.iso.max}`);
+                }
+
+                if (capabilities.exposureCompensation) {
+                    log(`✅ Exposição: ${capabilities.exposureCompensation.min} - ${capabilities.exposureCompensation.max}`);
                 }
 
                 updateStatus('Câmera OK - Aguardando Desktop');
 
             } catch (e) {
-                log('❌ Erro: ' + e.message);
+                log('❌ Erro câmera: ' + e.message);
+                alert('Erro ao acessar câmera: ' + e.message);
             }
         }
 
         startBtn.onclick = async () => {
             startBtn.disabled = true;
+            startBtn.textContent = '⏳ Iniciando...';
             await startCamera();
+            startBtn.textContent = '✅ Câmera Ativa';
         };
 
         function applyCommand(data) {
-            if (!videoTrack) return;
+            if (!videoTrack) {
+                log('⚠️ VideoTrack não disponível');
+                return;
+            }
 
             const capabilities = videoTrack.getCapabilities();
 
-            if (data.control === 'zoom' && capabilities.zoom) {
+            if (data.control === 'zoom') {
+                if (!capabilities.zoom) {
+                    log('⚠️ Zoom não suportado');
+                    return;
+                }
+
                 const val = parseFloat(data.value);
                 const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
                 
+                zoomDisplay.textContent = `Zoom: ${clamped.toFixed(1)}x`;
+                
                 videoTrack.applyConstraints({
                     advanced: [{ zoom: clamped }]
-                }).catch(() => {});
+                }).catch((e) => {
+                    log('❌ Erro zoom: ' + e.message);
+                });
             }
 
-            if (data.control === 'iso' && capabilities.iso) {
+            if (data.control === 'iso') {
+                if (!capabilities.iso) {
+                    log('⚠️ ISO não suportado');
+                    return;
+                }
+
                 const val = parseInt(data.value);
                 const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
                 
                 videoTrack.applyConstraints({
                     advanced: [{ iso: clamped }]
-                }).then(() => log(`✅ ISO: ${clamped}`)).catch(() => {});
+                }).then(() => {
+                    log(`✅ ISO: ${clamped}`);
+                }).catch((e) => {
+                    log('❌ Erro ISO: ' + e.message);
+                });
             }
 
-            if (data.control === 'exposure' && capabilities.exposureCompensation) {
+            if (data.control === 'exposure') {
+                if (!capabilities.exposureCompensation) {
+                    log('⚠️ Exposição não suportada');
+                    return;
+                }
+
                 const val = parseFloat(data.value);
                 const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
                 
                 videoTrack.applyConstraints({
                     advanced: [{ exposureCompensation: clamped }]
-                }).then(() => log(`✅ Exposição: ${clamped.toFixed(1)}`)).catch(() => {});
+                }).then(() => {
+                    log(`✅ Exposição: ${clamped.toFixed(1)}`);
+                }).catch((e) => {
+                    log('❌ Erro exposição: ' + e.message);
+                });
             }
         }
 
-        // PWA
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(() => log('✅ PWA instalado'))
-                .catch(() => {});
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => log('✅ PWA registrado'))
+                .catch(() => log('⚠️ PWA não disponível'));
         }
     </script>
 </body>

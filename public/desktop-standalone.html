@@ -36,6 +36,7 @@
             background: #000;
             border: 3px solid #667eea;
             margin-bottom: 15px;
+            min-height: 400px;
         }
         .controls-panel {
             background: #1a1a1a;
@@ -69,6 +70,10 @@
             font-weight: bold;
             cursor: pointer;
         }
+        button:disabled {
+            background: #555;
+            opacity: 0.5;
+        }
         .control-group {
             background: rgba(255,255,255,0.05);
             padding: 15px;
@@ -92,6 +97,14 @@
             background: #333;
             border-radius: 5px;
         }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
         .console {
             background: #000;
             color: #0f0;
@@ -102,6 +115,20 @@
             font-family: 'Courier New', monospace;
             font-size: 12px;
             margin-top: 15px;
+        }
+        .status-badge {
+            background: #f44336;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .status-badge.connected {
+            background: #4CAF50;
+        }
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -119,8 +146,9 @@
         <div class="controls-panel">
             <div class="connection-box">
                 <label style="font-weight:bold; margin-bottom:10px; display:block;">ID do Celular:</label>
-                <input type="text" id="mobileId" placeholder="Digite o ID do celular">
+                <input type="text" id="mobileId" placeholder="Cole o ID do celular aqui">
                 <button id="connectBtn">🚀 CONECTAR</button>
+                <div class="status-badge" id="statusBadge">Desconectado</div>
             </div>
 
             <div class="control-group">
@@ -149,10 +177,11 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script>
         const remoteVideo = document.getElementById('remoteVideo');
         const connectBtn = document.getElementById('connectBtn');
+        const statusBadge = document.getElementById('statusBadge');
         const mobileIdInput = document.getElementById('mobileId');
         const zoomSlider = document.getElementById('zoomSlider');
         const isoSlider = document.getElementById('isoSlider');
@@ -168,45 +197,68 @@
             const timestamp = new Date().toLocaleTimeString();
             consoleDiv.innerHTML += `[${timestamp}] ${message}<br>`;
             consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(message);
         }
 
-        const desktopId = 'desktop-' + Math.random().toString(36).substr(2, 9);
-        peer = new Peer(desktopId, {
-            host: 'peerjs-server.herokuapp.com',
-            secure: true,
-            port: 443
-        });
+        log('🔄 Iniciando PeerJS...');
+
+        const desktopId = 'desk-' + Math.random().toString(36).substr(2, 12);
+        peer = new Peer(desktopId);
 
         peer.on('open', (id) => {
             log('✅ Desktop pronto: ' + id);
         });
 
+        peer.on('error', (err) => {
+            log('❌ Erro PeerJS: ' + err.type);
+        });
+
         connectBtn.onclick = () => {
             const mobileId = mobileIdInput.value.trim();
             if (!mobileId) {
-                alert('Digite o ID do celular!');
+                alert('⚠️ Digite o ID do celular!');
                 return;
             }
 
-            log('📞 Conectando ao celular...');
+            log('📞 Conectando ao celular: ' + mobileId);
+            connectBtn.disabled = true;
+            connectBtn.textContent = '⏳ Conectando...';
 
             dataConnection = peer.connect(mobileId);
             
             dataConnection.on('open', () => {
                 log('✅ DataChannel aberto!');
+                statusBadge.textContent = 'Conectado';
+                statusBadge.classList.add('connected');
+                connectBtn.textContent = '✅ Conectado';
             });
 
-            mediaConnection = peer.call(mobileId, new MediaStream());
-            
-            mediaConnection.on('stream', (stream) => {
-                log('📺 VÍDEO RECEBIDO!');
-                remoteVideo.srcObject = stream;
+            dataConnection.on('error', (err) => {
+                log('❌ Erro conexão: ' + err);
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🚀 CONECTAR';
             });
+
+            setTimeout(() => {
+                log('📞 Iniciando chamada de vídeo...');
+                mediaConnection = peer.call(mobileId, new MediaStream());
+                
+                mediaConnection.on('stream', (stream) => {
+                    log('📺 VÍDEO RECEBIDO!');
+                    remoteVideo.srcObject = stream;
+                });
+
+                mediaConnection.on('error', (err) => {
+                    log('❌ Erro vídeo: ' + err);
+                });
+            }, 1000);
         };
 
         function sendCommand(control, value) {
             if (dataConnection && dataConnection.open) {
                 dataConnection.send({ control, value });
+            } else {
+                log('⚠️ Não conectado ao celular');
             }
         }
 
