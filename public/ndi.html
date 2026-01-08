@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Remote Pro - NDI Output</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #0f0;
+            font-family: 'Segoe UI', monospace;
+            font-size: 18px;
+            background: rgba(0,0,0,0.9);
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            border: 2px solid #0f0;
+            box-shadow: 0 4px 20px rgba(0,255,0,0.3);
+        }
+        #status.error {
+            color: #f00;
+            border-color: #f00;
+            box-shadow: 0 4px 20px rgba(255,0,0,0.3);
+        }
+        #status.connected {
+            color: #0f0;
+            border-color: #0f0;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255,255,255,0.7);
+            font-family: monospace;
+            font-size: 14px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">🔄 Iniciando NDI Output...</div>
+    <div id="info">Room ID: <span id="roomIdDisplay">-</span></div>
+    <video id="remoteVideo" autoplay playsinline muted></video>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const remoteVideo = document.getElementById('remoteVideo');
+        const statusDiv = document.getElementById('status');
+        const roomIdDisplay = document.getElementById('roomIdDisplay');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+
+        if (!roomId) {
+            statusDiv.innerHTML = '❌ ERRO: ID da sala não fornecido<br><br>Use: ?room=SEUID<br>Exemplo: ?room=camera123';
+            statusDiv.classList.add('error');
+            roomIdDisplay.textContent = 'ERRO';
+        } else {
+            roomIdDisplay.textContent = roomId;
+            statusDiv.textContent = `🔄 Conectando à sala: ${roomId}`;
+            
+            const socket = io();
+            let peerConnection;
+
+            const config = {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun3.l.google.com:19302' }
+                ],
+                iceTransportPolicy: 'all',
+                bundlePolicy: 'max-bundle',
+                rtcpMuxPolicy: 'require'
+            };
+
+            socket.on('connect', () => {
+                console.log('✅ Socket conectado');
+                statusDiv.textContent = `📡 Conectado - Aguardando mobile...`;
+                socket.emit('join-room', roomId);
+            });
+
+            socket.on('offer', async (data) => {
+                console.log('📥 Offer recebida');
+                statusDiv.textContent = '📥 Recebendo stream...';
+                
+                peerConnection = new RTCPeerConnection(config);
+
+                peerConnection.ontrack = (event) => {
+                    console.log('📺 Stream recebido!');
+                    remoteVideo.srcObject = event.streams[0];
+                    
+                    const stream = event.streams[0];
+                    const videoTrack = stream.getVideoTracks()[0];
+                    
+                    if (videoTrack) {
+                        const settings = videoTrack.getSettings();
+                        console.log('📹 Resolução:', settings.width + 'x' + settings.height);
+                        console.log('🎬 FPS:', settings.frameRate);
+                        
+                        statusDiv.textContent = `✅ NDI ATIVO - ${settings.width}x${settings.height} @ ${settings.frameRate}fps`;
+                        statusDiv.classList.add('connected');
+                    }
+                    
+                    // Ocultar status após 5 segundos
+                    setTimeout(() => {
+                        statusDiv.style.opacity = '0.2';
+                    }, 5000);
+
+                    // Metadata para NDI
+                    document.title = `Camera Remote NDI - ${roomId}`;
+                };
+
+                peerConnection.onconnectionstatechange = () => {
+                    const state = peerConnection.connectionState;
+                    console.log('🔗 Connection state:', state);
+                    
+                    if (state === 'connected') {
+                        statusDiv.textContent = '✅ NDI ATIVO';
+                        statusDiv.classList.add('connected');
+                        statusDiv.classList.remove('error');
+                    } else if (state === 'disconnected' || state === 'failed') {
+                        statusDiv.textContent = '⚠️ Conexão perdida';
+                        statusDiv.classList.remove('connected');
+                        statusDiv.classList.add('error');
+                        statusDiv.style.opacity = '1';
+                    }
+                };
+
+                peerConnection.oniceconnectionstatechange = () => {
+                    console.log('🧊 ICE state:', peerConnection.iceConnectionState);
+                };
+
+                peerConnection.onicecandidate = (e) => {
+                    if (e.candidate) {
+                        socket.emit('ice-candidate', { roomId, candidate: e.candidate });
+                    }
+                };
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.emit('answer', { roomId, answer });
+                console.log('📤 Answer enviada');
+            });
+
+            socket.on('ice-candidate', async (data) => {
+                if (data.candidate && peerConnection) {
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    } catch (e) {
+                        console.error('Erro ao adicionar ICE candidate:', e);
+                    }
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('❌ Socket desconectado');
+                statusDiv.textContent = '❌ DESCONECTADO DO SERVIDOR';
+                statusDiv.classList.remove('connected');
+                statusDiv.classList.add('error');
+                statusDiv.style.opacity = '1';
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('❌ Erro de conexão:', error);
+                statusDiv.textContent = '❌ ERRO DE CONEXÃO';
+                statusDiv.classList.add('error');
+            });
+        }
+
+        // Manter a tela ativa (evitar sleep)
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(() => {
+                console.log('Wake Lock não suportado');
+            });
+        }
+
+        // Log de performance
+        setInterval(() => {
+            if (remoteVideo.srcObject) {
+                const stream = remoteVideo.srcObject;
+                const videoTrack = stream.getVideoTracks()[0];
+                if (videoTrack) {
+                    console.log('📊 Track enabled:', videoTrack.enabled, 'Ready state:', videoTrack.readyState);
+                }
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
