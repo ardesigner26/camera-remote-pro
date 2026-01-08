@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Remote Pro - Advanced Mobile</title>
+    <title>Camera Remote Pro - Mobile Advanced</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,9 +29,8 @@
         .subtitle {
             text-align: center;
             color: #0f0;
-            font-size: 14px;
+            font-size: 12px;
             margin-bottom: 20px;
-            font-weight: bold;
         }
         .status-panel {
             background: rgba(255,255,255,0.1);
@@ -108,33 +108,28 @@
             font-size: 11px;
             margin-top: 15px;
         }
-        .zoom-display {
-            background: rgba(102, 126, 234, 0.3);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .remote-control-badge {
-            background: rgba(76, 175, 80, 0.3);
-            border: 2px solid #4CAF50;
+        .remote-indicator {
+            background: rgba(255, 152, 0, 0.2);
+            border: 2px solid #FF9800;
             padding: 10px;
             border-radius: 8px;
             text-align: center;
             margin-bottom: 15px;
             font-size: 14px;
+            display: none;
+        }
+        .remote-indicator.active {
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
-        <div class="subtitle">🎛️ MODO AVANÇADO - Controle Remoto Ativo</div>
+        <div class="subtitle">✅ Transmissão de Culto - Latência Ultra Baixa</div>
         
-        <div class="remote-control-badge">
-            ✅ Desktop pode controlar TODAS as configurações remotamente
+        <div class="remote-indicator" id="remoteIndicator">
+            🖥️ Desktop está controlando remotamente
         </div>
 
         <div class="status-panel">
@@ -156,15 +151,12 @@
             </div>
         </div>
 
-        <div class="zoom-display" id="zoomDisplay">
-            Zoom: 1.0x
-        </div>
-
         <video id="video" autoplay playsinline muted></video>
 
         <div class="config-section">
             <div class="config-title">📹 RESOLUÇÃO</div>
             <select id="resolutionSelect">
+                <option value="640x480">VGA 480p (640x480)</option>
                 <option value="1280x720">HD 720p (1280x720)</option>
                 <option value="1920x1080" selected>Full HD 1080p (1920x1080)</option>
                 <option value="2560x1440">2K QHD (2560x1440)</option>
@@ -175,10 +167,11 @@
         <div class="config-section">
             <div class="config-title">📊 BITRATE</div>
             <select id="bitrateSelect">
-                <option value="5000000">5 Mbps (Economia)</option>
-                <option value="10000000">10 Mbps (Balanceado)</option>
-                <option value="15000000" selected>15 Mbps (Alta)</option>
-                <option value="20000000">20 Mbps (Muito Alta)</option>
+                <option value="2000000">2 Mbps (Ultra Baixa Latência)</option>
+                <option value="5000000">5 Mbps (Baixa Latência)</option>
+                <option value="10000000">10 Mbps (Média)</option>
+                <option value="15000000" selected>15 Mbps (Mais ou Menos)</option>
+                <option value="20000000">20 Mbps (Alta)</option>
                 <option value="30000000">30 Mbps (Ultra)</option>
                 <option value="50000000">50 Mbps (Máxima - 4K)</option>
             </select>
@@ -187,17 +180,19 @@
         <div class="config-section">
             <div class="config-title">🎬 FPS</div>
             <select id="fpsSelect">
-                <option value="24">24 FPS (Cinema)</option>
-                <option value="30" selected>30 FPS (Padrão)</option>
-                <option value="60">60 FPS (Suave)</option>
+                <option value="15">15 FPS (Ultra Baixa Latência)</option>
+                <option value="20">20 FPS (Baixa Latência)</option>
+                <option value="24">24 FPS (Média)</option>
+                <option value="30" selected>30 FPS (Mais ou Menos)</option>
+                <option value="60">60 FPS (Alta Latência)</option>
             </select>
         </div>
 
         <label>ID da Sala:</label>
         <input type="text" id="roomId" placeholder="Digite o ID da sala">
         
-        <button id="startBtn">🚀 INICIAR CÂMERA</button>
-        <button id="restartBtn" style="display:none; background:#f44336;">🔄 REINICIAR CÂMERA</button>
+        <button id="startBtn">🚀 INICIAR</button>
+        <button id="restartBtn" style="display:none; background:#f44336;">🔄 APLICAR MUDANÇAS</button>
 
         <div class="log" id="log"></div>
     </div>
@@ -215,10 +210,11 @@
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
         const currentBitrate = document.getElementById('currentBitrate');
-        const zoomDisplay = document.getElementById('zoomDisplay');
         const logDiv = document.getElementById('log');
+        const remoteIndicator = document.getElementById('remoteIndicator');
 
         let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
+        let isRemoteControl = false;
 
         const config = { 
             iceServers: [
@@ -246,7 +242,7 @@
             const fps = parseInt(fpsSelect.value);
             const bitrate = parseInt(bitrateSelect.value);
 
-            log(`📹 Iniciando: ${width}x${height} @ ${fps}fps, ${(bitrate/1000000).toFixed(0)} Mbps`);
+            log(`📹 Iniciando: ${width}x${height} @ ${fps}fps, ${(bitrate/1000000).toFixed(1)} Mbps`);
             updateStatus('Iniciando câmera...');
 
             try {
@@ -274,16 +270,21 @@
 
                 currentResolution.textContent = actualRes;
                 currentFps.textContent = actualFps + ' fps';
-                currentBitrate.textContent = (bitrate/1000000).toFixed(0) + ' Mbps';
+                currentBitrate.textContent = (bitrate/1000000).toFixed(1) + ' Mbps';
 
                 log(`✅ Câmera: ${actualRes} @ ${actualFps}fps`);
-                
-                const capabilities = videoTrack.getCapabilities();
-                if (capabilities.zoom) {
-                    log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}-${capabilities.zoom.max.toFixed(1)}`);
-                }
 
                 updateStatus('Câmera OK');
+                
+                if (socket) {
+                    socket.emit('config-update', { 
+                        roomId, 
+                        resolution: resolutionSelect.value,
+                        bitrate: bitrateSelect.value,
+                        fps: fpsSelect.value
+                    });
+                }
+                
                 return true;
 
             } catch (e) {
@@ -327,12 +328,14 @@
             }
 
             parameters.encodings[0].maxBitrate = bitrate;
+            parameters.encodings[0].minBitrate = Math.floor(bitrate * 0.8);
             parameters.encodings[0].maxFramerate = fps;
             parameters.encodings[0].priority = 'high';
             parameters.encodings[0].networkPriority = 'high';
+            parameters.encodings[0].scaleResolutionDownBy = 1;
 
             await videoSender.setParameters(parameters);
-            log(`⚙️ Encoder: ${(bitrate/1000000)}Mbps, ${fps}fps`);
+            log(`⚙️ Encoder: ${(bitrate/1000000).toFixed(1)}Mbps, ${fps}fps`);
         }
 
         startBtn.onclick = async () => {
@@ -379,28 +382,34 @@
                 }
             });
 
-            // CONTROLES REMOTOS
             socket.on('camera-control', (data) => {
                 applyCommand(data);
             });
 
-            // MUDANÇA DE CONFIGURAÇÃO REMOTA
             socket.on('change-config', async (data) => {
-                log(`🎛️ Mudança remota: ${data.type}`);
+                log('🖥️ Desktop solicitou mudança de configuração');
+                isRemoteControl = true;
+                remoteIndicator.classList.add('active');
                 
-                if (data.type === 'resolution') {
-                    resolutionSelect.value = data.value;
-                    log(`📹 Nova resolução: ${data.value}`);
-                } else if (data.type === 'bitrate') {
-                    bitrateSelect.value = data.value;
-                    log(`📊 Novo bitrate: ${(data.value/1000000)}Mbps`);
-                } else if (data.type === 'fps') {
-                    fpsSelect.value = data.value;
-                    log(`🎬 Novo FPS: ${data.value}`);
+                if (data.resolution) {
+                    resolutionSelect.value = data.resolution;
+                    log(`📹 Resolução alterada para: ${data.resolution}`);
+                }
+                if (data.bitrate) {
+                    bitrateSelect.value = data.bitrate;
+                    log(`📊 Bitrate alterado para: ${(data.bitrate/1000000).toFixed(1)}Mbps`);
+                }
+                if (data.fps) {
+                    fpsSelect.value = data.fps;
+                    log(`🎬 FPS alterado para: ${data.fps}`);
                 }
                 
-                // Reiniciar câmera com novas configurações
                 await restartCamera();
+                
+                setTimeout(() => {
+                    isRemoteControl = false;
+                    remoteIndicator.classList.remove('active');
+                }, 3000);
             });
 
             socket.on('disconnect', () => {
@@ -411,48 +420,37 @@
             restartBtn.style.display = 'block';
             startBtn.textContent = '✅ Câmera Ativa';
             roomIdInput.disabled = true;
-            resolutionSelect.disabled = true;
-            bitrateSelect.disabled = true;
-            fpsSelect.disabled = true;
             log('⏳ Aguardando desktop...');
         };
 
         async function restartCamera() {
             log('🔄 Reiniciando câmera...');
-            await startCamera();
-            if (videoSender && peerConnection) {
-                await videoSender.replaceTrack(localStream.getVideoTracks()[0]);
-                videoTrack = localStream.getVideoTracks()[0];
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            
+            const success = await startCamera();
+            
+            if (success && videoSender && peerConnection) {
+                const newTrack = localStream.getVideoTracks()[0];
+                await videoSender.replaceTrack(newTrack);
+                videoTrack = newTrack;
                 await applyEncoderSettings();
-                log('✅ Câmera atualizada!');
+                log('✅ Câmera reiniciada com sucesso!');
             }
         }
 
         restartBtn.onclick = restartCamera;
 
-        let zoomQueue = [];
-        let isProcessingZoom = false;
-
-        async function processZoomQueue() {
-            if (isProcessingZoom || zoomQueue.length === 0) return;
-            
-            isProcessingZoom = true;
-            const zoomValue = zoomQueue[zoomQueue.length - 1];
-            zoomQueue = [];
-
-            try {
-                await videoTrack.applyConstraints({
-                    advanced: [{ zoom: zoomValue }]
-                });
-                zoomDisplay.textContent = `Zoom: ${zoomValue.toFixed(1)}x`;
-            } catch (e) {}
-            
-            isProcessingZoom = false;
-            
-            if (zoomQueue.length > 0) {
-                setTimeout(() => processZoomQueue(), 10);
-            }
-        }
+        [resolutionSelect, bitrateSelect, fpsSelect].forEach(select => {
+            select.addEventListener('change', () => {
+                if (!isRemoteControl) {
+                    restartBtn.style.background = '#FF9800';
+                    restartBtn.textContent = '🔄 APLICAR MUDANÇAS';
+                }
+            });
+        });
 
         function applyCommand(data) {
             if (!videoTrack) return;
@@ -462,8 +460,9 @@
             if (data.control === 'zoom' && capabilities.zoom) {
                 const val = parseFloat(data.value);
                 const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
-                zoomQueue.push(clamped);
-                processZoomQueue();
+                videoTrack.applyConstraints({
+                    advanced: [{ zoom: clamped }]
+                }).catch(() => {});
             }
 
             if (data.control === 'iso' && capabilities.iso) {
