@@ -182,7 +182,6 @@
                 <div class="status-badge" id="statusBadge">Desconectado</div>
             </div>
 
-            <!-- CONFIGURAÇÕES DE VÍDEO REMOTAS -->
             <div class="section-title">📹 CONFIGURAÇÕES DE VÍDEO (Controle Remoto)</div>
 
             <div class="control-group">
@@ -225,7 +224,6 @@
                 <button class="update" id="updateFpsBtn" disabled>🔄 APLICAR FPS NO CELULAR</button>
             </div>
 
-            <!-- CONTROLES DE CÂMERA -->
             <div class="section-title">🎥 CONTROLES DE CÂMERA</div>
 
             <div class="control-group">
@@ -261,7 +259,6 @@
         const statusBadge = document.getElementById('statusBadge');
         const roomIdInput = document.getElementById('roomIdInput');
         
-        // Config selects
         const resolutionSelect = document.getElementById('resolutionSelect');
         const bitrateSelect = document.getElementById('bitrateSelect');
         const fpsSelect = document.getElementById('fpsSelect');
@@ -269,7 +266,6 @@
         const updateBitrateBtn = document.getElementById('updateBitrateBtn');
         const updateFpsBtn = document.getElementById('updateFpsBtn');
         
-        // Control sliders
         const zoomSlider = document.getElementById('zoomSlider');
         const isoSlider = document.getElementById('isoSlider');
         const exposureSlider = document.getElementById('exposureSlider');
@@ -326,14 +322,13 @@
                     statusBadge.classList.add('connected');
                     connectBtn.textContent = '✅ Conectado';
                     
-                    // Habilitar controles
                     updateResolutionBtn.disabled = false;
                     updateBitrateBtn.disabled = false;
                     updateFpsBtn.disabled = false;
                     zoomSlider.disabled = false;
                     isoSlider.disabled = false;
                     exposureSlider.disabled = false;
-                });
+                };
 
                 peerConnection.onicecandidate = (e) => {
                     if (e.candidate) {
@@ -365,7 +360,6 @@
                 connectBtn.disabled = false;
                 connectBtn.textContent = '🚀 CONECTAR';
                 
-                // Desabilitar controles
                 updateResolutionBtn.disabled = true;
                 updateBitrateBtn.disabled = true;
                 updateFpsBtn.disabled = true;
@@ -375,7 +369,6 @@
             });
         };
 
-        // BOTÕES DE ATUALIZAÇÃO DE CONFIG
         updateResolutionBtn.onclick = () => {
             const value = resolutionSelect.value;
             socket.emit('change-config', { roomId, type: 'resolution', value });
@@ -397,7 +390,6 @@
             alert(`✅ Comando enviado! O celular vai aplicar ${value} FPS`);
         };
 
-        // CONTROLES DE CÂMERA
         function sendCommand(control, value) {
             if (socket && roomId) {
                 socket.emit('camera-control', { roomId, control, value });
