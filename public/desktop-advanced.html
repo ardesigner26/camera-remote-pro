@@ -356,9 +356,11 @@
         const consoleDiv = document.getElementById('console');
         const zoomIndicatorDesktop = document.getElementById('zoomIndicatorDesktop');
 
-        let socket, peerConnection, roomId;
+        let socket = null;
+        let peerConnection = null;
+        let roomId = null;
         let currentLatency = 0;
-        let availableCamerasDesktop = [];
+        let availableCamerasDesktop = []; // Stores camera list received from mobile
 
         const config = {
             iceServers: [
@@ -375,22 +377,30 @@
         }
 
         function applyUltraLowLatency(latencyMs) {
-            if (!remoteVideo) return;
+            if (!remoteVideo) {
+                log('⚠️ Não há elemento de vídeo para aplicar latência.');
+                return;
+            }
 
             currentLatency = latencyMs;
             const latencySeconds = latencyMs / 1000;
 
             try {
+                // Set playoutDelayHint on the video element
                 if (remoteVideo.playoutDelayHint !== undefined) {
                     remoteVideo.playoutDelayHint = latencySeconds;
-                    log(`⚡ playoutDelayHint = ${latencyMs}ms`);
+                    log(`⚡ playoutDelayHint no vídeo = ${latencyMs}ms`);
                 }
 
+                // Disable preload if latency is 0 to reduce buffering
                 if (latencyMs === 0) {
                     remoteVideo.preload = 'none';
-                    log('⚡ Preload desabilitado');
+                    log('⚡ Preload do vídeo desabilitado.');
+                } else {
+                    remoteVideo.preload = 'auto'; // Re-enable if not 0
                 }
 
+                // Set playoutDelayHint and jitterBufferTarget on WebRTC receivers
                 if (peerConnection) {
                     const receivers = peerConnection.getReceivers();
                     receivers.forEach(receiver => {
@@ -398,43 +408,46 @@
                             try {
                                 if (receiver.playoutDelayHint !== undefined) {
                                     receiver.playoutDelayHint = latencySeconds;
-                                    log(`⚡ receiver.playoutDelayHint = ${latencyMs}ms`);
+                                    log(`⚡ playoutDelayHint no receiver = ${latencyMs}ms`);
                                 }
                                 
+                                // jitterBufferTarget is typically for Chrome/Edge and expects milliseconds
                                 if (receiver.jitterBufferTarget !== undefined) {
                                     receiver.jitterBufferTarget = latencyMs;
-                                    log(`⚡ jitterBufferTarget = ${latencyMs}ms`);
+                                    log(`⚡ jitterBufferTarget no receiver = ${latencyMs}ms`);
                                 }
                             } catch (e) {
-                                log(`⚠️ Erro ao configurar receiver: ${e.message}`);
+                                log(`⚠️ Erro ao configurar receiver para latência: ${e.message}`);
                             }
                         }
                     });
                 }
 
-                log(`✅ Latência configurada para ${latencyMs}ms`);
+                log(`✅ Latência configurada para ${latencyMs}ms.`);
 
             } catch (e) {
-                log(`❌ Erro ao aplicar latência: ${e.message}`);
+                log(`❌ Erro ao aplicar configurações de latência: ${e.message}`);
             }
         }
 
-        // 📹 ATUALIZA INFO DA CÂMERA SELECIONADA NO DESKTOP
         function updateCameraInfoDesktop() {
-            const camera = availableCamerasDesktop.find(c => c.id === cameraSelectDesktop.value);
-            if (!camera) return;
+            const cam = availableCamerasDesktop.find(c => c.id === cameraSelectDesktop.value);
+            if (!cam) {
+                cameraInfoDesktop.style.display = 'none';
+                return;
+            }
             
-            const facingText = camera.facingMode === 'environment' ? 'Traseira' : 
-                              camera.facingMode === 'user' ? 'Frontal' : 'Desconhecida';
+            const facingText = cam.facingMode === 'environment' ? 'Traseira' : 
+                              cam.facingMode === 'user' ? 'Frontal' : 'Desconhecida';
             
             cameraInfoDesktop.innerHTML = `
-                <strong>${camera.label}</strong><br>
+                <strong>${cam.label}</strong><br>
                 📍 Posição: ${facingText}<br>
-                📐 Resolução Máxima: ${camera.maxResolution.width}x${camera.maxResolution.height}<br>
-                ${camera.isBest ? '🏆 Esta é a câmera com MELHOR resolução!' : ''}
+                📐 Resolução Máxima: ${cam.maxResolution.width}x${cam.maxResolution.height}<br>
+                ${cam.isBest ? '🏆 Esta é a câmera com MELHOR resolução!' : ''}
             `;
             cameraInfoDesktop.style.display = 'block';
-            cameraInfoDesktop.className = camera.isBest ? 'camera-info-desktop best' : 'camera-info-desktop';
+            cameraInfoDesktop.className = cam.isBest ? 'camera-info-desktop best' : 'camera-info-desktop';
         }
 
         cameraSelectDesktop.addEventListener('change', () => {
@@ -455,14 +468,14 @@
             socket = io();
 
             socket.on('connect', () => {
-                log('✅ Socket conectado');
+                log('✅ Socket.io conectado.');
                 socket.emit('join-room', roomId);
                 log(`📡 Entrou na sala: ${roomId}`);
                 statusBadge.textContent = 'Aguardando Mobile...';
             });
 
             socket.on('offer', async (data) => {
-                log('📥 OFFER recebida');
+                log('📥 OFFER WebRTC recebida.');
                 
                 peerConnection = new RTCPeerConnection(config);
 
@@ -470,6 +483,7 @@
                     log('📺 VÍDEO RECEBIDO!');
                     remoteVideo.srcObject = event.streams[0];
                     
+                    // Apply latency settings after the video stream is available
                     setTimeout(() => {
                         applyUltraLowLatency(currentLatency);
                     }, 100);
@@ -490,30 +504,35 @@
                 peerConnection.onicecandidate = (e) => {
                     if (e.candidate) {
                         socket.emit('ice-candidate', { roomId, candidate: e.candidate });
+                        log('📤 ICE Candidate enviado.');
                     }
                 };
 
                 peerConnection.onconnectionstatechange = () => {
-                    log('🔗 Estado: ' + peerConnection.connectionState);
+                    log('🔗 Estado da conexão WebRTC: ' + peerConnection.connectionState);
+                    if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
+                        log('❌ Conexão WebRTC perdida ou falhou.');
+                        // Handle reconnection or UI reset
+                    }
                 };
 
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
                 socket.emit('answer', { roomId, answer });
-                log('📤 ANSWER enviada');
+                log('📤 ANSWER WebRTC enviada.');
             });
 
             socket.on('ice-candidate', async (data) => {
                 if (data.candidate && peerConnection) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    log('📥 ICE Candidate adicionado.');
                 }
             });
 
-            // 📹 RECEBER LISTA DE CÂMERAS DO MOBILE
             socket.on('camera-list', (data) => {
                 if (data.cameras && data.cameras.length > 0) {
-                    log(`📹 Recebidas ${data.cameras.length} câmera(s) do celular`);
+                    log(`📹 Recebidas ${data.cameras.length} câmera(s) do celular.`);
                     
                     availableCamerasDesktop = data.cameras;
                     
@@ -537,9 +556,15 @@
                     
                     cameraSelectDesktop.disabled = false;
                     changeCameraBtn.disabled = false;
-                    updateCameraInfoDesktop();
+                    updateCameraInfoDesktop(); // Update local info display
                     
-                    log(`✅ Lista de câmeras atualizada`);
+                    log(`✅ Lista de câmeras atualizada no desktop.`);
+                } else {
+                    log('⚠️ Nenhuma câmera recebida do celular ou lista vazia.');
+                    cameraSelectDesktop.innerHTML = '<option value="">Nenhuma câmera disponível</option>';
+                    cameraSelectDesktop.disabled = true;
+                    changeCameraBtn.disabled = true;
+                    cameraInfoDesktop.style.display = 'none';
                 }
             });
 
@@ -547,9 +572,11 @@
                 if (data.zoom !== undefined) {
                     const zoomVal = parseFloat(data.zoom);
                     zoomValue.textContent = zoomVal.toFixed(1) + 'x';
+                    zoomSlider.value = zoomVal; // Update slider position
                     
                     zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
                     zoomIndicatorDesktop.style.display = 'block';
+                    log(`🔍 Zoom atualizado para: ${zoomVal.toFixed(1)}x`);
                 }
             });
 
@@ -557,9 +584,9 @@
                 if (data.zoomMin !== undefined && data.zoomMax !== undefined) {
                     zoomSlider.min = data.zoomMin;
                     zoomSlider.max = data.zoomMax;
-                    zoomSlider.step = 0.01;
+                    zoomSlider.step = 0.01; // Allow fine-grained control
                     
-                    log(`✅ Zoom range: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
+                    log(`✅ Zoom range recebido: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
                     
                     if (data.currentZoom) {
                         const zoomVal = parseFloat(data.currentZoom);
@@ -567,12 +594,13 @@
                         zoomValue.textContent = zoomVal.toFixed(1) + 'x';
                         zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
                         zoomIndicatorDesktop.style.display = 'block';
+                        log(`🔍 Zoom atual: ${zoomVal.toFixed(1)}x`);
                     }
                 }
             });
 
             socket.on('disconnect', () => {
-                log('❌ Desconectado');
+                log('❌ Desconectado do servidor.');
                 statusBadge.textContent = 'Desconectado';
                 statusBadge.classList.remove('connected');
                 connectBtn.disabled = false;
@@ -589,43 +617,47 @@
                 changeCameraBtn.disabled = true;
                 
                 zoomIndicatorDesktop.style.display = 'none';
+                remoteVideo.srcObject = null; // Clear video
+                peerConnection = null; // Reset peer connection
+                log('UI resetada após desconexão.');
             });
         };
 
-        // 📹 TROCAR CÂMERA REMOTAMENTE
         changeCameraBtn.onclick = () => {
             const selectedCameraId = cameraSelectDesktop.value;
             if (!selectedCameraId) {
-                alert('⚠️ Selecione uma câmera!');
+                alert('⚠️ Selecione uma câmera para trocar!');
                 return;
             }
             
-            const camera = availableCamerasDesktop.find(c => c.id === selectedCameraId);
-            if (camera) {
-                log(`📹 Solicitando troca para: ${camera.label}`);
+            const cam = availableCamerasDesktop.find(c => c.id === selectedCameraId);
+            if (cam) {
+                log(`📹 Solicitando ao celular para trocar para: ${cam.label}`);
                 socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
-                alert(`✅ Comando enviado! O celular vai trocar para: ${camera.label}`);
+                alert(`✅ Comando enviado! O celular vai trocar para: ${cam.label}`);
+            } else {
+                log('⚠️ Câmera selecionada não encontrada na lista.');
             }
         };
 
         updateResolutionBtn.onclick = () => {
             const value = resolutionSelect.value;
             socket.emit('change-config', { roomId, type: 'resolution', value });
-            log(`📐 Alterando resolução para: ${value}`);
+            log(`📐 Enviando comando para alterar resolução para: ${value}`);
             alert(`✅ Comando enviado! O celular vai reiniciar a câmera em ${value}`);
         };
 
         updateBitrateBtn.onclick = () => {
             const value = bitrateSelect.value;
             socket.emit('change-config', { roomId, type: 'bitrate', value });
-            log(`📊 Alterando bitrate para: ${(value/1000000)} Mbps`);
+            log(`📊 Enviando comando para alterar bitrate para: ${(value/1000000)} Mbps`);
             alert(`✅ Comando enviado! O celular vai aplicar bitrate de ${(value/1000000)} Mbps`);
         };
 
         updateFpsBtn.onclick = () => {
             const value = fpsSelect.value;
             socket.emit('change-config', { roomId, type: 'fps', value });
-            log(`🎬 Alterando FPS para: ${value}`);
+            log(`🎬 Enviando comando para alterar FPS para: ${value}`);
             alert(`✅ Comando enviado! O celular vai aplicar ${value} FPS`);
         };
 
@@ -633,14 +665,19 @@
             const latency = parseInt(this.value);
             latencyValue.textContent = latency + 'ms';
             
-            applyUltraLowLatency(latency);
+            applyUltraLowLatency(latency); // Apply locally
             
-            log(`⏱️ Latência ajustada para: ${latency}ms`);
+            // No need to send to mobile, as mobile is the sender and desktop is the receiver
+            // The latency settings are applied on the receiving end (desktop/OBS)
+            log(`⏱️ Latência do buffer ajustada localmente para: ${latency}ms`);
         });
 
         function sendCommand(control, value) {
             if (socket && roomId) {
                 socket.emit('camera-control', { roomId, control, value });
+                log(`📤 Comando de controle enviado: ${control} = ${value}`);
+            } else {
+                log(`⚠️ Não foi possível enviar comando ${control}: socket ou roomId não definidos.`);
             }
         }
 
@@ -658,20 +695,22 @@
             
             zoomDebounceTimer = setTimeout(() => {
                 sendCommand('zoom', value);
-                log(`🔍 Zoom enviado: ${value.toFixed(1)}x`);
-            }, 150);
+                log(`🔍 Zoom enviado: ${value.toFixed(1)}x (após debounce)`);
+            }, 150); // 150ms debounce for sending zoom commands
         });
 
         isoSlider.addEventListener('input', function() {
             const value = isoSlider.value;
             isoValue.textContent = value;
             sendCommand('iso', value);
+            log(`📷 ISO enviado: ${value}`);
         });
 
         exposureSlider.addEventListener('input', function() {
             const value = exposureSlider.value;
             exposureValue.textContent = parseFloat(value).toFixed(1);
             sendCommand('exposure', value);
+            log(`☀️ Exposição enviada: ${value}`);
         });
     </script>
 </body>
