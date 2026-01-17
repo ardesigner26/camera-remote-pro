@@ -175,6 +175,15 @@
         .status-badge.connected {
             background: #4CAF50;
         }
+        .latency-info {
+            background: rgba(255, 152, 0, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #FF9800;
+            text-align: center;
+        }
         @media (max-width: 1024px) {
             .main-grid { grid-template-columns: 1fr; }
         }
@@ -183,13 +192,13 @@
 <body>
     <div class="header">
         <h1>🖥️ CAMERA REMOTE PRO</h1>
-        <div class="subtitle">🎛️ Zoom Instantâneo + Latência Zero</div>
+        <div class="subtitle">⚡ LATÊNCIA ULTRA BAIXA - Zero Buffer</div>
     </div>
 
     <div class="main-grid">
         <div class="video-section">
             <div class="video-wrapper">
-                <video id="remoteVideo" autoplay playsinline></video>
+                <video id="remoteVideo" autoplay playsinline muted></video>
                 <div class="zoom-indicator-desktop" id="zoomIndicatorDesktop">🔍 1.0x</div>
             </div>
             <div class="console" id="console"></div>
@@ -245,26 +254,29 @@
                 <button class="update" id="updateFpsBtn" disabled>🔄 APLICAR FPS NO CELULAR</button>
             </div>
 
-            <div class="section-title">⏱️ CONTROLE DE LATÊNCIA</div>
+            <div class="section-title">⏱️ CONTROLE DE LATÊNCIA (Buffer de Vídeo)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>⏱️ LATÊNCIA</span>
+                    <span>⚡ LATÊNCIA DO BUFFER</span>
                     <span class="control-value" id="latencyValue">0ms</span>
                 </div>
                 <input type="range" id="latencySlider" min="0" max="500" step="10" value="0" disabled>
-                <small style="color: #999; display: block; margin-top: 8px;">Controle de 0ms (zero) até 500ms</small>
+                <div class="latency-info">
+                    ⚡ 0ms = ZERO buffer (latência mínima)<br>
+                    🔄 Ajuste se vídeo travar/picar
+                </div>
             </div>
 
             <div class="section-title">🎥 CONTROLES DE CÂMERA</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>🔍 ZOOM (Instantâneo)</span>
+                    <span>🔍 ZOOM</span>
                     <span class="control-value" id="zoomValue">1.0x</span>
                 </div>
                 <input type="range" id="zoomSlider" min="1" max="10" step="0.01" value="1" disabled>
-                <small style="color: #999; display: block; margin-top: 8px;">Resposta imediata, sem delay</small>
+                <small style="color: #999; display: block; margin-top: 8px;">Aplica 200ms após parar de mover</small>
             </div>
 
             <div class="control-group">
@@ -312,6 +324,7 @@
         const zoomIndicatorDesktop = document.getElementById('zoomIndicatorDesktop');
 
         let socket, peerConnection, roomId;
+        let currentLatency = 0;
 
         const config = {
             iceServers: [
@@ -325,6 +338,59 @@
             consoleDiv.innerHTML += `[${timestamp}] ${message}<br>`;
             consoleDiv.scrollTop = consoleDiv.scrollHeight;
             console.log(message);
+        }
+
+        // ⚡ FUNÇÃO QUE APLICA LATÊNCIA ZERO NO VÍDEO
+        function applyUltraLowLatency(latencyMs) {
+            if (!remoteVideo) return;
+
+            currentLatency = latencyMs;
+
+            // Converte ms para segundos
+            const latencySeconds = latencyMs / 1000;
+
+            try {
+                // ⚡ LATÊNCIA ZERO - playoutDelayHint
+                if (remoteVideo.playoutDelayHint !== undefined) {
+                    remoteVideo.playoutDelayHint = latencySeconds;
+                    log(`⚡ playoutDelayHint = ${latencyMs}ms`);
+                }
+
+                // ⚡ Desabilita preload se latência = 0
+                if (latencyMs === 0) {
+                    remoteVideo.preload = 'none';
+                    log('⚡ Preload desabilitado');
+                }
+
+                // ⚡ Configura receivers WebRTC
+                if (peerConnection) {
+                    const receivers = peerConnection.getReceivers();
+                    receivers.forEach(receiver => {
+                        if (receiver.track && receiver.track.kind === 'video') {
+                            try {
+                                // playoutDelayHint no receiver
+                                if (receiver.playoutDelayHint !== undefined) {
+                                    receiver.playoutDelayHint = latencySeconds;
+                                    log(`⚡ receiver.playoutDelayHint = ${latencyMs}ms`);
+                                }
+                                
+                                // jitterBufferTarget (Chrome/Edge)
+                                if (receiver.jitterBufferTarget !== undefined) {
+                                    receiver.jitterBufferTarget = latencyMs;
+                                    log(`⚡ jitterBufferTarget = ${latencyMs}ms`);
+                                }
+                            } catch (e) {
+                                log(`⚠️ Erro ao configurar receiver: ${e.message}`);
+                            }
+                        }
+                    });
+                }
+
+                log(`✅ Latência configurada para ${latencyMs}ms`);
+
+            } catch (e) {
+                log(`❌ Erro ao aplicar latência: ${e.message}`);
+            }
         }
 
         connectBtn.onclick = () => {
@@ -355,6 +421,12 @@
                 peerConnection.ontrack = (event) => {
                     log('📺 VÍDEO RECEBIDO!');
                     remoteVideo.srcObject = event.streams[0];
+                    
+                    // ⚡ APLICA LATÊNCIA ZERO IMEDIATAMENTE
+                    setTimeout(() => {
+                        applyUltraLowLatency(currentLatency);
+                    }, 100);
+                    
                     statusBadge.textContent = 'Transmitindo';
                     statusBadge.classList.add('connected');
                     connectBtn.textContent = '✅ Conectado';
@@ -463,12 +535,15 @@
             alert(`✅ Comando enviado! O celular vai aplicar ${value} FPS`);
         };
 
+        // ⚡ CONTROLE DE LATÊNCIA EM TEMPO REAL
         latencySlider.addEventListener('input', function() {
             const latency = parseInt(this.value);
             latencyValue.textContent = latency + 'ms';
             
-            log(`⏱️ Latência: ${latency}ms (Buffer de envio ajustado)`);
-            socket.emit('latency-buffer', { roomId, bufferDelay: latency });
+            // Aplica latência no vídeo
+            applyUltraLowLatency(latency);
+            
+            log(`⏱️ Latência ajustada para: ${latency}ms`);
         });
 
         function sendCommand(control, value) {
@@ -477,7 +552,8 @@
             }
         }
 
-        // 🔍 ZOOM INSTANTÂNEO - ENVIO IMEDIATO
+        // 🔍 ZOOM COM DEBOUNCE
+        let zoomDebounceTimer = null;
         zoomSlider.addEventListener('input', function() {
             const value = parseFloat(zoomSlider.value);
             zoomValue.textContent = value.toFixed(1) + 'x';
@@ -486,8 +562,15 @@
             zoomIndicatorDesktop.textContent = `🔍 ${value.toFixed(1)}x`;
             zoomIndicatorDesktop.style.display = 'block';
             
-            // Envio IMEDIATO, sem throttle
-            sendCommand('zoom', value);
+            // Debounce: envia só quando parar de mover
+            if (zoomDebounceTimer) {
+                clearTimeout(zoomDebounceTimer);
+            }
+            
+            zoomDebounceTimer = setTimeout(() => {
+                sendCommand('zoom', value);
+                log(`🔍 Zoom enviado: ${value.toFixed(1)}x`);
+            }, 150);
         });
 
         isoSlider.addEventListener('input', function() {
