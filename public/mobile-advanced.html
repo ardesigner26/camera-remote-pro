@@ -146,7 +146,7 @@
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
-        <div class="subtitle">✅ Zoom Instantâneo + Latência Zero</div>
+        <div class="subtitle">✅ Zoom Suave (Sem Travamentos) + Latência Zero</div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -242,7 +242,7 @@
         let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
         let zoomMin = 1.0, zoomMax = 10.0, currentZoomLevel = 1.0;
         let bufferDelay = 100;
-        let isApplyingZoom = false;
+        let zoomDebounceTimer = null;
 
         const config = { 
             iceServers: [
@@ -265,9 +265,9 @@
             statusSpan.textContent = text;
         }
 
-        // 🔍 FUNÇÃO DE ZOOM INSTANTÂNEO (SEM INTERPOLAÇÃO)
-        async function applyZoom(zoomLevel) {
-            if (!videoTrack || isApplyingZoom) return;
+        // 🔍 FUNÇÃO DE ZOOM COM DEBOUNCE (Aplica só quando parar de mover)
+        function applyZoom(zoomLevel) {
+            if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
             
@@ -278,35 +278,41 @@
 
             // Limita ao range suportado pela câmera
             const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
+            
+            // Atualiza UI instantaneamente (feedback visual)
             currentZoomLevel = clampedZoom;
-
-            // Atualiza UI imediatamente (antes de aplicar)
             const displayZoom = clampedZoom.toFixed(1);
             currentZoom.textContent = displayZoom + 'x';
             zoomIndicator.textContent = `🔍 ${displayZoom}x`;
             zoomInfo.textContent = `Zoom: ${displayZoom}x / Max: ${zoomMax.toFixed(1)}x`;
 
-            // Aplica na câmera de forma não-bloqueante
-            isApplyingZoom = true;
-            try {
-                await videoTrack.applyConstraints({
-                    advanced: [{ zoom: clampedZoom }]
-                });
-
-                // Envia para o desktop
-                if (socket && roomId) {
-                    socket.emit('zoom-update', { 
-                        roomId, 
-                        zoom: clampedZoom,
-                        zoomMin: zoomMin,
-                        zoomMax: zoomMax
-                    });
-                }
-            } catch (e) {
-                // Silencioso
-            } finally {
-                isApplyingZoom = false;
+            // Cancela timer anterior
+            if (zoomDebounceTimer) {
+                clearTimeout(zoomDebounceTimer);
             }
+
+            // Aplica zoom apenas 200ms DEPOIS de parar de mover (debounce)
+            zoomDebounceTimer = setTimeout(async () => {
+                try {
+                    await videoTrack.applyConstraints({
+                        advanced: [{ zoom: clampedZoom }]
+                    });
+
+                    log(`🔍 Zoom aplicado: ${clampedZoom.toFixed(1)}x`);
+
+                    // Envia para o desktop
+                    if (socket && roomId) {
+                        socket.emit('zoom-update', { 
+                            roomId, 
+                            zoom: clampedZoom,
+                            zoomMin: zoomMin,
+                            zoomMax: zoomMax
+                        });
+                    }
+                } catch (e) {
+                    log('❌ Erro ao aplicar zoom: ' + e.message);
+                }
+            }, 200); // 200ms de espera após parar de mover
         }
 
         async function startCamera() {
@@ -494,7 +500,7 @@
                 }
             });
 
-            // 🔍 RECEBER COMANDO DE ZOOM DO DESKTOP (INSTANTÂNEO)
+            // 🔍 RECEBER COMANDO DE ZOOM DO DESKTOP
             socket.on('camera-control', (data) => {
                 if (data.control === 'zoom') {
                     applyZoom(data.value);
