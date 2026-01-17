@@ -183,7 +183,7 @@
 <body>
     <div class="header">
         <h1>🖥️ CAMERA REMOTE PRO</h1>
-        <div class="subtitle">🎛️ CONTROLE AVANÇADO TOTAL - Zoom Suave + Latência Zero</div>
+        <div class="subtitle">🎛️ Zoom Instantâneo + Latência Zero</div>
     </div>
 
     <div class="main-grid">
@@ -260,11 +260,11 @@
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>🔍 ZOOM (Suave)</span>
+                    <span>🔍 ZOOM (Instantâneo)</span>
                     <span class="control-value" id="zoomValue">1.0x</span>
                 </div>
-                <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" disabled>
-                <small style="color: #999; display: block; margin-top: 8px;">Zoom fluido igual câmera nativa</small>
+                <input type="range" id="zoomSlider" min="1" max="10" step="0.01" value="1" disabled>
+                <small style="color: #999; display: block; margin-top: 8px;">Resposta imediata, sem delay</small>
             </div>
 
             <div class="control-group">
@@ -477,8 +477,7 @@
             }
         }
 
-        // 🔍 ZOOM SUAVE - ENVIO CONTÍNUO
-        let lastZoomSent = 0;
+        // 🔍 ZOOM INSTANTÂNEO - ENVIO IMEDIATO
         zoomSlider.addEventListener('input', function() {
             const value = parseFloat(zoomSlider.value);
             zoomValue.textContent = value.toFixed(1) + 'x';
@@ -487,12 +486,8 @@
             zoomIndicatorDesktop.textContent = `🔍 ${value.toFixed(1)}x`;
             zoomIndicatorDesktop.style.display = 'block';
             
-            // Envio mais frequente para zoom suave (a cada 30ms)
-            const now = Date.now();
-            if (now - lastZoomSent > 30) {
-                sendCommand('zoom', value);
-                lastZoomSent = now;
-            }
+            // Envio IMEDIATO, sem throttle
+            sendCommand('zoom', value);
         });
 
         isoSlider.addEventListener('input', function() {

@@ -146,7 +146,7 @@
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
-        <div class="subtitle">✅ Zoom Suave + Latência Zero</div>
+        <div class="subtitle">✅ Zoom Instantâneo + Latência Zero</div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -240,9 +240,9 @@
         const logDiv = document.getElementById('log');
 
         let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
-        let zoomMin = 1.0, zoomMax = 10.0, currentZoomLevel = 1.0, targetZoomLevel = 1.0;
+        let zoomMin = 1.0, zoomMax = 10.0, currentZoomLevel = 1.0;
         let bufferDelay = 100;
-        let zoomAnimationFrame = null;
+        let isApplyingZoom = false;
 
         const config = { 
             iceServers: [
@@ -265,48 +265,29 @@
             statusSpan.textContent = text;
         }
 
-        // 🔍 FUNÇÃO DE ZOOM SUAVE (Interpolação gradual)
-        function smoothZoomAnimation() {
-            if (!videoTrack) return;
+        // 🔍 FUNÇÃO DE ZOOM INSTANTÂNEO (SEM INTERPOLAÇÃO)
+        async function applyZoom(zoomLevel) {
+            if (!videoTrack || isApplyingZoom) return;
 
-            const diff = targetZoomLevel - currentZoomLevel;
-            const step = diff * 0.15; // Velocidade de interpolação (15% por frame)
-
-            if (Math.abs(diff) > 0.01) {
-                currentZoomLevel += step;
-                
-                // Atualiza interface
-                updateZoomUI(currentZoomLevel);
-                
-                // Aplica na câmera
-                applyZoomToCamera(currentZoomLevel);
-                
-                // Continua animação
-                zoomAnimationFrame = requestAnimationFrame(smoothZoomAnimation);
-            } else {
-                // Finaliza no valor exato
-                currentZoomLevel = targetZoomLevel;
-                updateZoomUI(currentZoomLevel);
-                applyZoomToCamera(currentZoomLevel);
-                zoomAnimationFrame = null;
+            const capabilities = videoTrack.getCapabilities();
+            
+            if (!capabilities.zoom) {
+                log('⚠️ Zoom não suportado neste dispositivo');
+                return;
             }
-        }
 
-        function updateZoomUI(zoomLevel) {
-            const displayZoom = zoomLevel.toFixed(1);
+            // Limita ao range suportado pela câmera
+            const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
+            currentZoomLevel = clampedZoom;
+
+            // Atualiza UI imediatamente (antes de aplicar)
+            const displayZoom = clampedZoom.toFixed(1);
             currentZoom.textContent = displayZoom + 'x';
             zoomIndicator.textContent = `🔍 ${displayZoom}x`;
             zoomInfo.textContent = `Zoom: ${displayZoom}x / Max: ${zoomMax.toFixed(1)}x`;
-        }
 
-        async function applyZoomToCamera(zoomLevel) {
-            if (!videoTrack) return;
-
-            const capabilities = videoTrack.getCapabilities();
-            if (!capabilities.zoom) return;
-
-            const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, zoomLevel));
-
+            // Aplica na câmera de forma não-bloqueante
+            isApplyingZoom = true;
             try {
                 await videoTrack.applyConstraints({
                     advanced: [{ zoom: clampedZoom }]
@@ -322,33 +303,10 @@
                     });
                 }
             } catch (e) {
-                // Silencioso para não logar a cada frame
+                // Silencioso
+            } finally {
+                isApplyingZoom = false;
             }
-        }
-
-        // 🔍 FUNÇÃO DE ZOOM CHAMADA PELO DESKTOP
-        function setTargetZoom(zoomLevel) {
-            if (!videoTrack) return;
-
-            const capabilities = videoTrack.getCapabilities();
-            
-            if (!capabilities.zoom) {
-                log('⚠️ Zoom não suportado neste dispositivo');
-                return;
-            }
-
-            // Define novo alvo
-            targetZoomLevel = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
-
-            log(`🔍 Zoom solicitado: ${targetZoomLevel.toFixed(1)}x`);
-
-            // Cancela animação anterior se existir
-            if (zoomAnimationFrame) {
-                cancelAnimationFrame(zoomAnimationFrame);
-            }
-
-            // Inicia animação suave
-            smoothZoomAnimation();
         }
 
         async function startCamera() {
@@ -386,7 +344,6 @@
                     zoomMin = capabilities.zoom.min || 1.0;
                     zoomMax = capabilities.zoom.max || 10.0;
                     currentZoomLevel = settings.zoom || 1.0;
-                    targetZoomLevel = currentZoomLevel;
                     
                     log(`✅ Zoom disponível: Min ${zoomMin.toFixed(1)}x - Max ${zoomMax.toFixed(1)}x`);
                     zoomInfo.textContent = `Zoom: ${currentZoomLevel.toFixed(1)}x / Max: ${zoomMax.toFixed(1)}x`;
@@ -537,10 +494,10 @@
                 }
             });
 
-            // 🔍 RECEBER COMANDO DE ZOOM DO DESKTOP (SUAVE)
+            // 🔍 RECEBER COMANDO DE ZOOM DO DESKTOP (INSTANTÂNEO)
             socket.on('camera-control', (data) => {
                 if (data.control === 'zoom') {
-                    setTargetZoom(data.value);
+                    applyZoom(data.value);
                 } else {
                     applyCommand(data);
                 }
@@ -584,7 +541,7 @@
         async function restartCamera() {
             log('🔄 Reiniciando câmera...');
             
-            const previousZoom = targetZoomLevel;
+            const previousZoom = currentZoomLevel;
             
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
@@ -600,7 +557,7 @@
                 
                 // Reaplicar zoom após restart
                 setTimeout(() => {
-                    setTargetZoom(previousZoom);
+                    applyZoom(previousZoom);
                 }, 500);
                 
                 log('✅ Câmera reiniciada com sucesso!');
