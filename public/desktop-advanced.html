@@ -183,7 +183,7 @@
 <body>
     <div class="header">
         <h1>🖥️ CAMERA REMOTE PRO</h1>
-        <div class="subtitle">🎛️ CONTROLE AVANÇADO TOTAL - Desktop</div>
+        <div class="subtitle">🎛️ CONTROLE AVANÇADO TOTAL - Zoom Suave + Latência Zero</div>
     </div>
 
     <div class="main-grid">
@@ -250,21 +250,21 @@
             <div class="control-group">
                 <div class="control-label">
                     <span>⏱️ LATÊNCIA</span>
-                    <span class="control-value" id="latencyValue">100ms</span>
+                    <span class="control-value" id="latencyValue">0ms</span>
                 </div>
-                <input type="range" id="latencySlider" min="50" max="500" step="10" value="100" disabled>
-                <small style="color: #999; display: block; margin-top: 8px;">Ajusta buffer de envio (sem comprimir vídeo)</small>
+                <input type="range" id="latencySlider" min="0" max="500" step="10" value="0" disabled>
+                <small style="color: #999; display: block; margin-top: 8px;">Controle de 0ms (zero) até 500ms</small>
             </div>
 
             <div class="section-title">🎥 CONTROLES DE CÂMERA</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>🔍 ZOOM</span>
+                    <span>🔍 ZOOM (Suave)</span>
                     <span class="control-value" id="zoomValue">1.0x</span>
                 </div>
                 <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" disabled>
-                <small style="color: #999; display: block; margin-top: 8px;">Range ajusta automaticamente ao limite da câmera</small>
+                <small style="color: #999; display: block; margin-top: 8px;">Zoom fluido igual câmera nativa</small>
             </div>
 
             <div class="control-group">
@@ -396,13 +396,10 @@
                 if (data.zoom !== undefined) {
                     const zoomVal = parseFloat(data.zoom);
                     zoomValue.textContent = zoomVal.toFixed(1) + 'x';
-                    zoomSlider.value = zoomVal;
                     
                     // Mostrar indicador no vídeo
                     zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
                     zoomIndicatorDesktop.style.display = 'block';
-                    
-                    log(`🔍 Zoom atualizado: ${zoomVal.toFixed(1)}x`);
                 }
             });
 
@@ -411,7 +408,7 @@
                 if (data.zoomMin !== undefined && data.zoomMax !== undefined) {
                     zoomSlider.min = data.zoomMin;
                     zoomSlider.max = data.zoomMax;
-                    zoomSlider.step = 0.1;
+                    zoomSlider.step = 0.01;
                     
                     log(`✅ Zoom range: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
                     
@@ -480,6 +477,7 @@
             }
         }
 
+        // 🔍 ZOOM SUAVE - ENVIO CONTÍNUO
         let lastZoomSent = 0;
         zoomSlider.addEventListener('input', function() {
             const value = parseFloat(zoomSlider.value);
@@ -489,11 +487,11 @@
             zoomIndicatorDesktop.textContent = `🔍 ${value.toFixed(1)}x`;
             zoomIndicatorDesktop.style.display = 'block';
             
+            // Envio mais frequente para zoom suave (a cada 30ms)
             const now = Date.now();
-            if (now - lastZoomSent > 100) {
+            if (now - lastZoomSent > 30) {
                 sendCommand('zoom', value);
                 lastZoomSent = now;
-                log(`🔍 Enviando zoom: ${value.toFixed(1)}x`);
             }
         });
 
