@@ -47,6 +47,11 @@ io.on('connection', (socket) => {
         socket.to(data.roomId).emit('change-config', data);
     });
 
+
+    socket.on('camera-list', (data) => {
+        console.log('?? Lista de câmeras recebida:', data.cameras ? data.cameras.length : 0, 'câmera(s)');
+        socket.to(data.roomId).emit('camera-list', data);
+    });
     socket.on('disconnect', () => {
         console.log('âŒ Cliente desconectado:', socket.id);
     });
