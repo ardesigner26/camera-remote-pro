@@ -48,12 +48,45 @@
             color: #0f0;
             font-weight: bold;
         }
-        video {
+        .video-container {
             width: 100%;
+            height: 400px;
+            overflow: hidden;
             border-radius: 10px;
             border: 3px solid #0f0;
             margin-bottom: 20px;
             background: #000;
+            position: relative;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* 🔍 INDICADOR DE ZOOM - SEMPRE VISÍVEL */
+        .zoom-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.85);
+            color: #0f0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 10px rgba(0,255,0,0.3);
+        }
+        .zoom-info {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid #667eea;
         }
         .config-section {
             background: rgba(255,255,255,0.05);
@@ -113,7 +146,7 @@
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
-        <div class="subtitle">✅ Transmissão de Culto - Latência Ultra Baixa</div>
+        <div class="subtitle">✅ Zoom Óptico Real + Latência Ultra Baixa</div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -133,12 +166,16 @@
                 <span class="status-value" id="currentBitrate">-</span>
             </div>
             <div class="status-row">
-                <span>Buffer:</span>
-                <span class="status-value" id="currentBuffer">100ms</span>
+                <span>Zoom:</span>
+                <span class="status-value" id="currentZoom">1.0x</span>
             </div>
         </div>
 
-        <video id="video" autoplay playsinline muted></video>
+        <div class="video-container">
+            <video id="video" autoplay playsinline muted></video>
+            <div class="zoom-indicator" id="zoomIndicator">🔍 1.0x</div>
+            <div class="zoom-info" id="zoomInfo">Zoom: 1.0x / Max: -</div>
+        </div>
 
         <div class="config-section">
             <div class="config-title">📹 RESOLUÇÃO</div>
@@ -197,11 +234,14 @@
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
         const currentBitrate = document.getElementById('currentBitrate');
-        const currentBuffer = document.getElementById('currentBuffer');
+        const currentZoom = document.getElementById('currentZoom');
+        const zoomIndicator = document.getElementById('zoomIndicator');
+        const zoomInfo = document.getElementById('zoomInfo');
         const logDiv = document.getElementById('log');
 
         let socket, peerConnection, localStream, roomId, videoTrack, videoSender;
-        let bufferDelay = 100; // ms
+        let zoomMin = 1.0, zoomMax = 10.0, currentZoomLevel = 1.0;
+        let bufferDelay = 100;
 
         const config = { 
             iceServers: [
@@ -222,6 +262,47 @@
 
         function updateStatus(text) {
             statusSpan.textContent = text;
+        }
+
+        // 🔍 FUNÇÃO DE ZOOM ÓPTICO REAL
+        async function applyZoom(zoomLevel) {
+            if (!videoTrack) return;
+
+            const capabilities = videoTrack.getCapabilities();
+            
+            if (!capabilities.zoom) {
+                log('⚠️ Zoom não suportado neste dispositivo');
+                return;
+            }
+
+            // Limita ao range suportado pela câmera
+            const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
+            currentZoomLevel = clampedZoom;
+
+            try {
+                await videoTrack.applyConstraints({
+                    advanced: [{ zoom: clampedZoom }]
+                });
+
+                // Atualiza indicadores
+                currentZoom.textContent = clampedZoom.toFixed(1) + 'x';
+                zoomIndicator.textContent = `🔍 ${clampedZoom.toFixed(1)}x`;
+                zoomInfo.textContent = `Zoom: ${clampedZoom.toFixed(1)}x / Max: ${zoomMax.toFixed(1)}x`;
+
+                log(`🔍 Zoom aplicado: ${clampedZoom.toFixed(1)}x (limite: ${zoomMax.toFixed(1)}x)`);
+
+                // Envia para o desktop
+                if (socket && roomId) {
+                    socket.emit('zoom-update', { 
+                        roomId, 
+                        zoom: clampedZoom,
+                        zoomMin: zoomMin,
+                        zoomMax: zoomMax
+                    });
+                }
+            } catch (e) {
+                log('❌ Erro ao aplicar zoom: ' + e.message);
+            }
         }
 
         async function startCamera() {
@@ -252,13 +333,37 @@
                 videoTrack = localStream.getVideoTracks()[0];
 
                 const settings = videoTrack.getSettings();
+                const capabilities = videoTrack.getCapabilities();
+
+                // 🔍 Detecta capacidades de zoom
+                if (capabilities.zoom) {
+                    zoomMin = capabilities.zoom.min || 1.0;
+                    zoomMax = capabilities.zoom.max || 10.0;
+                    currentZoomLevel = settings.zoom || 1.0;
+                    
+                    log(`✅ Zoom disponível: Min ${zoomMin.toFixed(1)}x - Max ${zoomMax.toFixed(1)}x`);
+                    zoomInfo.textContent = `Zoom: ${currentZoomLevel.toFixed(1)}x / Max: ${zoomMax.toFixed(1)}x`;
+                    
+                    // Envia capacidades para o desktop
+                    if (socket && roomId) {
+                        socket.emit('zoom-capabilities', { 
+                            roomId, 
+                            zoomMin, 
+                            zoomMax,
+                            currentZoom: currentZoomLevel
+                        });
+                    }
+                } else {
+                    log('⚠️ Zoom não suportado neste dispositivo');
+                    zoomInfo.textContent = 'Zoom não disponível';
+                }
+
                 const actualRes = `${settings.width}x${settings.height}`;
                 const actualFps = settings.frameRate;
 
                 currentResolution.textContent = actualRes;
                 currentFps.textContent = actualFps + ' fps';
                 currentBitrate.textContent = (bitrate/1000000).toFixed(1) + ' Mbps';
-                currentBuffer.textContent = bufferDelay + 'ms';
 
                 log(`✅ Câmera: ${actualRes} @ ${actualFps}fps`);
 
@@ -355,6 +460,21 @@
                     await peerConnection.setLocalDescription(offer);
                     socket.emit('offer', { roomId, offer });
                     log('📤 OFFER enviada');
+                    
+                    // Envia capacidades de zoom após conectar
+                    setTimeout(() => {
+                        if (videoTrack) {
+                            const capabilities = videoTrack.getCapabilities();
+                            if (capabilities.zoom) {
+                                socket.emit('zoom-capabilities', { 
+                                    roomId, 
+                                    zoomMin, 
+                                    zoomMax,
+                                    currentZoom: currentZoomLevel
+                                });
+                            }
+                        }
+                    }, 1000);
                 }, 1000);
             });
 
@@ -370,8 +490,13 @@
                 }
             });
 
+            // 🔍 RECEBER COMANDO DE ZOOM DO DESKTOP
             socket.on('camera-control', (data) => {
-                applyCommand(data);
+                if (data.control === 'zoom') {
+                    applyZoom(data.value);
+                } else {
+                    applyCommand(data);
+                }
             });
 
             socket.on('change-config', async (data) => {
@@ -395,7 +520,6 @@
 
             socket.on('latency-buffer', (data) => {
                 bufferDelay = data.bufferDelay;
-                currentBuffer.textContent = bufferDelay + 'ms';
                 log(`⏱️ Buffer de envio ajustado para: ${bufferDelay}ms`);
             });
 
@@ -413,6 +537,8 @@
         async function restartCamera() {
             log('🔄 Reiniciando câmera...');
             
+            const previousZoom = currentZoomLevel;
+            
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
             }
@@ -424,6 +550,12 @@
                 await videoSender.replaceTrack(newTrack);
                 videoTrack = newTrack;
                 await applyEncoderSettings();
+                
+                // Reaplicar zoom após restart
+                setTimeout(() => {
+                    applyZoom(previousZoom);
+                }, 500);
+                
                 log('✅ Câmera reiniciada com sucesso!');
             }
         }
@@ -441,14 +573,6 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-
-            if (data.control === 'zoom' && capabilities.zoom) {
-                const val = parseFloat(data.value);
-                const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
-                videoTrack.applyConstraints({
-                    advanced: [{ zoom: clamped }]
-                }).catch(() => {});
-            }
 
             if (data.control === 'iso' && capabilities.iso) {
                 const val = parseInt(data.value);

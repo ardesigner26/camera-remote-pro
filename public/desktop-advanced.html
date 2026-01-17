@@ -35,6 +35,9 @@
             padding: 20px;
             border-radius: 15px;
         }
+        .video-wrapper {
+            position: relative;
+        }
         video {
             width: 100%;
             border-radius: 10px;
@@ -42,6 +45,21 @@
             border: 3px solid #667eea;
             margin-bottom: 15px;
             min-height: 400px;
+        }
+        /* 🔍 INDICADOR DE ZOOM NO DESKTOP */
+        .zoom-indicator-desktop {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            color: #0f0;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            border: 3px solid #0f0;
+            box-shadow: 0 0 15px rgba(0,255,0,0.5);
+            display: none;
         }
         .controls-panel {
             background: #1a1a1a;
@@ -170,7 +188,10 @@
 
     <div class="main-grid">
         <div class="video-section">
-            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="video-wrapper">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="zoom-indicator-desktop" id="zoomIndicatorDesktop">🔍 1.0x</div>
+            </div>
             <div class="console" id="console"></div>
         </div>
 
@@ -243,6 +264,7 @@
                     <span class="control-value" id="zoomValue">1.0x</span>
                 </div>
                 <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" disabled>
+                <small style="color: #999; display: block; margin-top: 8px;">Range ajusta automaticamente ao limite da câmera</small>
             </div>
 
             <div class="control-group">
@@ -287,6 +309,7 @@
         const isoValue = document.getElementById('isoValue');
         const exposureValue = document.getElementById('exposureValue');
         const consoleDiv = document.getElementById('console');
+        const zoomIndicatorDesktop = document.getElementById('zoomIndicatorDesktop');
 
         let socket, peerConnection, roomId;
 
@@ -368,6 +391,41 @@
                 }
             });
 
+            // 🔍 RECEBER ATUALIZAÇÕES DE ZOOM DO MOBILE
+            socket.on('zoom-update', (data) => {
+                if (data.zoom !== undefined) {
+                    const zoomVal = parseFloat(data.zoom);
+                    zoomValue.textContent = zoomVal.toFixed(1) + 'x';
+                    zoomSlider.value = zoomVal;
+                    
+                    // Mostrar indicador no vídeo
+                    zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
+                    zoomIndicatorDesktop.style.display = 'block';
+                    
+                    log(`🔍 Zoom atualizado: ${zoomVal.toFixed(1)}x`);
+                }
+            });
+
+            // 🔍 RECEBER CAPACIDADES DE ZOOM DO MOBILE
+            socket.on('zoom-capabilities', (data) => {
+                if (data.zoomMin !== undefined && data.zoomMax !== undefined) {
+                    zoomSlider.min = data.zoomMin;
+                    zoomSlider.max = data.zoomMax;
+                    zoomSlider.step = 0.1;
+                    
+                    log(`✅ Zoom range: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
+                    
+                    // Atualizar valor atual
+                    if (data.currentZoom) {
+                        const zoomVal = parseFloat(data.currentZoom);
+                        zoomSlider.value = zoomVal;
+                        zoomValue.textContent = zoomVal.toFixed(1) + 'x';
+                        zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
+                        zoomIndicatorDesktop.style.display = 'block';
+                    }
+                }
+            });
+
             socket.on('disconnect', () => {
                 log('❌ Desconectado');
                 statusBadge.textContent = 'Desconectado';
@@ -382,6 +440,8 @@
                 zoomSlider.disabled = true;
                 isoSlider.disabled = true;
                 exposureSlider.disabled = true;
+                
+                zoomIndicatorDesktop.style.display = 'none';
             });
         };
 
@@ -422,13 +482,18 @@
 
         let lastZoomSent = 0;
         zoomSlider.addEventListener('input', function() {
-            const value = zoomSlider.value;
-            zoomValue.textContent = parseFloat(value).toFixed(1) + 'x';
+            const value = parseFloat(zoomSlider.value);
+            zoomValue.textContent = value.toFixed(1) + 'x';
+            
+            // Atualizar indicador visual
+            zoomIndicatorDesktop.textContent = `🔍 ${value.toFixed(1)}x`;
+            zoomIndicatorDesktop.style.display = 'block';
             
             const now = Date.now();
             if (now - lastZoomSent > 100) {
                 sendCommand('zoom', value);
                 lastZoomSent = now;
+                log(`🔍 Enviando zoom: ${value.toFixed(1)}x`);
             }
         });
 
