@@ -1,0 +1,481 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎛️ OBS Controls Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .status-connected {
+            background: #28a745;
+            color: white;
+        }
+        .status-disconnected {
+            background: #dc3545;
+            color: white;
+        }
+        .status-waiting {
+            background: #ffc107;
+            color: #000;
+        }
+        .room-info {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .control-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .control-section h2 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: 600;
+            color: #333;
+        }
+        select, input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        input[type="range"] {
+            padding: 0;
+            height: 40px;
+        }
+        .slider-value {
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 16px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .log-container {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        .indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="indicator" id="zoomIndicator"></div>
+
+    <div class="container">
+        <h1>🎛️ OBS CONTROLS PANEL</h1>
+        <p class="subtitle">Controle remoto para câmera no OBS</p>
+
+        <div class="status-bar">
+            <div class="room-info">📡 Sala: <span id="roomName">-</span></div>
+            <div class="status-badge status-disconnected" id="statusBadge">Desconectado</div>
+        </div>
+
+        <!-- CÂMERA -->
+        <div class="control-section">
+            <h2>📹 CÂMERA</h2>
+            <div class="control-row">
+                <label>Câmera Ativa:</label>
+                <select id="cameraSelect" disabled>
+                    <option>Aguardando conexão...</option>
+                </select>
+            </div>
+            <button id="changeCameraBtn" disabled>🔄 TROCAR CÂMERA</button>
+        </div>
+
+        <!-- QUALIDADE DE VÍDEO -->
+        <div class="control-section">
+            <h2>🎬 QUALIDADE DE VÍDEO</h2>
+            
+            <div class="control-row">
+                <label>Resolução:</label>
+                <select id="resolutionSelect">
+                    <option value="640x480">640x480 (SD)</option>
+                    <option value="1280x720">1280x720 (HD)</option>
+                    <option value="1920x1080" selected>1920x1080 (Full HD)</option>
+                    <option value="3840x2160">3840x2160 (4K)</option>
+                </select>
+            </div>
+            <button id="updateResolutionBtn" disabled>🔄 APLICAR RESOLUÇÃO</button>
+
+            <div class="control-row">
+                <label>Bitrate:</label>
+                <select id="bitrateSelect">
+                    <option value="1">1 Mbps (Baixo)</option>
+                    <option value="2.5">2.5 Mbps</option>
+                    <option value="5" selected>5 Mbps (Médio)</option>
+                    <option value="10">10 Mbps (Alto)</option>
+                    <option value="20">20 Mbps (Muito Alto)</option>
+                    <option value="50">50 Mbps (Ultra)</option>
+                </select>
+            </div>
+            <button id="updateBitrateBtn" disabled>🔄 APLICAR BITRATE</button>
+
+            <div class="control-row">
+                <label>FPS:</label>
+                <select id="fpsSelect">
+                    <option value="24">24 FPS (Cinema)</option>
+                    <option value="30" selected>30 FPS (Padrão)</option>
+                    <option value="60">60 FPS (Suave)</option>
+                </select>
+            </div>
+            <button id="updateFpsBtn" disabled>🔄 APLICAR FPS</button>
+        </div>
+
+        <!-- LATÊNCIA -->
+        <div class="control-section">
+            <h2>⚡ LATÊNCIA</h2>
+            <div class="control-row">
+                <label>Buffer de Latência:</label>
+                <select id="latencySelect">
+                    <option value="0">0ms (Ultra Baixa)</option>
+                    <option value="50">50ms (Muito Baixa)</option>
+                    <option value="100" selected>100ms (Baixa)</option>
+                    <option value="200">200ms (Normal)</option>
+                    <option value="500">500ms (Alta)</option>
+                </select>
+            </div>
+            <button id="updateLatencyBtn" disabled>🔄 APLICAR LATÊNCIA</button>
+        </div>
+
+        <!-- CONTROLES DE CÂMERA -->
+        <div class="control-section">
+            <h2>🎚️ CONTROLES DE CÂMERA</h2>
+            
+            <div class="control-row">
+                <label>🔍 Zoom:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" disabled>
+                    <span class="slider-value" id="zoomValue">1.0x</span>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <label>📷 ISO:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="range" id="isoSlider" min="100" max="3200" step="100" value="400" disabled>
+                    <span class="slider-value" id="isoValue">400</span>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <label>☀️ Exposição:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0" disabled>
+                    <span class="slider-value" id="exposureValue">0.0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOG -->
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room');
+
+        if (!roomId) {
+            alert('❌ ERRO: Adicione ?room=SEUID na URL\n\nExemplo: obs-controls.html?room=Culto');
+        }
+
+        document.getElementById('roomName').textContent = roomId || 'Não definida';
+
+        const statusBadge = document.getElementById('statusBadge');
+        const logContainer = document.getElementById('logContainer');
+        const zoomIndicator = document.getElementById('zoomIndicator');
+
+        // Elementos
+        const cameraSelect = document.getElementById('cameraSelect');
+        const changeCameraBtn = document.getElementById('changeCameraBtn');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const updateResolutionBtn = document.getElementById('updateResolutionBtn');
+        const bitrateSelect = document.getElementById('bitrateSelect');
+        const updateBitrateBtn = document.getElementById('updateBitrateBtn');
+        const fpsSelect = document.getElementById('fpsSelect');
+        const updateFpsBtn = document.getElementById('updateFpsBtn');
+        const latencySelect = document.getElementById('latencySelect');
+        const updateLatencyBtn = document.getElementById('updateLatencyBtn');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const isoSlider = document.getElementById('isoSlider');
+        const isoValue = document.getElementById('isoValue');
+        const exposureSlider = document.getElementById('exposureSlider');
+        const exposureValue = document.getElementById('exposureValue');
+
+        let socket;
+        let availableCameras = [];
+
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${time}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateStatus(text, type = 'waiting') {
+            statusBadge.textContent = text;
+            statusBadge.className = 'status-badge status-' + type;
+        }
+
+        if (roomId) {
+            socket = io();
+
+            socket.on('connect', () => {
+                log('✅ Socket.io conectado.');
+                socket.emit('join-room', roomId);
+                log(`📡 Entrou na sala: ${roomId}`);
+                updateStatus('Aguardando Mobile...', 'waiting');
+            });
+
+            socket.on('user-joined', (userId) => {
+                log(`👤 Usuário entrou: ${userId}`);
+                updateStatus('Conectado', 'connected');
+                
+                // Habilitar controles
+                changeCameraBtn.disabled = false;
+                updateResolutionBtn.disabled = false;
+                updateBitrateBtn.disabled = false;
+                updateFpsBtn.disabled = false;
+                updateLatencyBtn.disabled = false;
+                zoomSlider.disabled = false;
+                isoSlider.disabled = false;
+                exposureSlider.disabled = false;
+            });
+
+            socket.on('camera-list', (data) => {
+                if (data.cameras && data.cameras.length > 0) {
+                    log(`📹 Recebidas ${data.cameras.length} câmera(s) do celular.`);
+                    
+                    availableCameras = data.cameras;
+                    
+                    cameraSelect.innerHTML = '';
+                    data.cameras.forEach((camera) => {
+                        const option = document.createElement('option');
+                        option.value = camera.id;
+                        
+                        const facingIcon = camera.facingMode === 'environment' ? '📷' :
+                                          camera.facingMode === 'user' ? '🤳' : '📹';
+                        const bestBadge = camera.isBest ? ' 🏆 MELHOR' : '';
+                        
+                        option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
+                        
+                        cameraSelect.appendChild(option);
+                        
+                        if (camera.id === data.selectedCameraId) {
+                            cameraSelect.value = camera.id;
+                        }
+                    });
+                    
+                    cameraSelect.disabled = false;
+                    changeCameraBtn.disabled = false;
+                }
+            });
+
+            // TROCAR CÂMERA
+            changeCameraBtn.onclick = () => {
+                const selectedCameraId = cameraSelect.value;
+                socket.emit('camera-control', { roomId, control: 'switch-camera', value: selectedCameraId });
+                log(`📹 Solicitando troca para câmera: ${selectedCameraId}`);
+            };
+
+            // RESOLUÇÃO
+            updateResolutionBtn.onclick = () => {
+                const value = resolutionSelect.value;
+                socket.emit('change-config', { roomId, type: 'resolution', value });
+                log(`📺 Resolução alterada para: ${value}`);
+            };
+
+            // BITRATE
+            updateBitrateBtn.onclick = () => {
+                const value = bitrateSelect.value;
+                socket.emit('change-config', { roomId, type: 'bitrate', value });
+                log(`📊 Bitrate alterado para: ${value} Mbps`);
+            };
+
+            // FPS
+            updateFpsBtn.onclick = () => {
+                const value = fpsSelect.value;
+                socket.emit('change-config', { roomId, type: 'fps', value });
+                log(`🎬 FPS alterado para: ${value}`);
+            };
+
+            // LATÊNCIA
+            updateLatencyBtn.onclick = () => {
+                const value = latencySelect.value;
+                socket.emit('latency-change', { roomId, latency: parseInt(value) });
+                log(`⚡ Latência alterada para: ${value}ms`);
+            };
+
+            // ZOOM
+            let zoomDebounceTimer = null;
+            zoomSlider.addEventListener('input', function() {
+                const value = parseFloat(zoomSlider.value);
+                zoomValue.textContent = value.toFixed(1) + 'x';
+
+                zoomIndicator.textContent = `🔍 ${value.toFixed(1)}x`;
+                zoomIndicator.style.display = 'block';
+
+                if (zoomDebounceTimer) {
+                    clearTimeout(zoomDebounceTimer);
+                }
+
+                zoomDebounceTimer = setTimeout(() => {
+                    socket.emit('camera-control', { roomId, control: 'zoom', value });
+                    log(`🔍 Zoom ajustado para: ${value.toFixed(1)}x`);
+                    setTimeout(() => {
+                        zoomIndicator.style.display = 'none';
+                    }, 1000);
+                }, 150);
+            });
+
+            // ISO
+            isoSlider.addEventListener('input', function() {
+                const value = isoSlider.value;
+                isoValue.textContent = value;
+                socket.emit('camera-control', { roomId, control: 'iso', value });
+                log(`📷 ISO ajustado para: ${value}`);
+            });
+
+            // EXPOSIÇÃO
+            exposureSlider.addEventListener('input', function() {
+                const value = exposureSlider.value;
+                exposureValue.textContent = parseFloat(value).toFixed(1);
+                socket.emit('camera-control', { roomId, control: 'exposure', value });
+                log(`☀️ Exposição ajustada para: ${value}`);
+            });
+
+            socket.on('disconnect', () => {
+                log('❌ Desconectado');
+                updateStatus('Desconectado', 'disconnected');
+                
+                // Desabilitar controles
+                cameraSelect.disabled = true;
+                changeCameraBtn.disabled = true;
+                updateResolutionBtn.disabled = true;
+                updateBitrateBtn.disabled = true;
+                updateFpsBtn.disabled = true;
+                updateLatencyBtn.disabled = true;
+                zoomSlider.disabled = true;
+                isoSlider.disabled = true;
+                exposureSlider.disabled = true;
+            });
+        }
+    </script>
+</body>
+</html>
