@@ -63,7 +63,6 @@
             height: 100%;
             object-fit: cover;
         }
-        /* 🔍 INDICADOR DE ZOOM - SEMPRE VISÍVEL */
         .zoom-indicator {
             position: absolute;
             top: 15px;
@@ -118,6 +117,10 @@
             color: #fff;
             border: 2px solid rgba(255,255,255,0.2);
         }
+        select option {
+            background: #2a2a2a;
+            color: #fff;
+        }
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
@@ -129,6 +132,19 @@
         button:disabled {
             background: #555;
             opacity: 0.5;
+        }
+        .camera-info {
+            background: rgba(0,255,0,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            border: 1px solid #0f0;
+        }
+        .camera-info.best {
+            background: rgba(255,215,0,0.1);
+            border-color: #FFD700;
+            color: #FFD700;
         }
         .log {
             background: #000;
@@ -146,12 +162,16 @@
 <body>
     <div class="container">
         <h1>📱 CAMERA REMOTE PRO</h1>
-        <div class="subtitle">✅ Zoom Suave (Sem Travamentos) + Latência Zero</div>
+        <div class="subtitle">✅ Seleção Remota de Câmeras + Zoom Suave + Latência Zero</div>
 
         <div class="status-panel">
             <div class="status-row">
                 <span>Status:</span>
                 <span class="status-value" id="status">Desconectado</span>
+            </div>
+            <div class="status-row">
+                <span>Câmera:</span>
+                <span class="status-value" id="currentCamera">-</span>
             </div>
             <div class="status-row">
                 <span>Resolução:</span>
@@ -178,7 +198,15 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">📹 RESOLUÇÃO</div>
+            <div class="config-title">📹 SELECIONAR CÂMERA</div>
+            <select id="cameraSelect" disabled>
+                <option value="">Carregando câmeras...</option>
+            </select>
+            <div class="camera-info" id="cameraInfo" style="display:none;"></div>
+        </div>
+
+        <div class="config-section">
+            <div class="config-title">📐 RESOLUÇÃO</div>
             <select id="resolutionSelect">
                 <option value="640x480">VGA 480p (640x480)</option>
                 <option value="1280x720">HD 720p (1280x720)</option>
@@ -227,10 +255,13 @@
         const roomIdInput = document.getElementById('roomId');
         const startBtn = document.getElementById('startBtn');
         const restartBtn = document.getElementById('restartBtn');
+        const cameraSelect = document.getElementById('cameraSelect');
+        const cameraInfo = document.getElementById('cameraInfo');
         const resolutionSelect = document.getElementById('resolutionSelect');
         const bitrateSelect = document.getElementById('bitrateSelect');
         const fpsSelect = document.getElementById('fpsSelect');
         const statusSpan = document.getElementById('status');
+        const currentCamera = document.getElementById('currentCamera');
         const currentResolution = document.getElementById('currentResolution');
         const currentFps = document.getElementById('currentFps');
         const currentBitrate = document.getElementById('currentBitrate');
@@ -243,6 +274,9 @@
         let zoomMin = 1.0, zoomMax = 10.0, currentZoomLevel = 1.0;
         let bufferDelay = 100;
         let zoomDebounceTimer = null;
+        let availableCameras = [];
+        let bestCamera = null;
+        let selectedCameraId = null;
 
         const config = { 
             iceServers: [
@@ -265,7 +299,139 @@
             statusSpan.textContent = text;
         }
 
-        // 🔍 FUNÇÃO DE ZOOM COM DEBOUNCE (Aplica só quando parar de mover)
+        // 📹 DETECTAR TODAS AS CÂMERAS DISPONÍVEIS
+        async function detectCameras() {
+            try {
+                await navigator.mediaDevices.getUserMedia({ video: true });
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                
+                log(`📹 ${videoDevices.length} câmera(s) detectada(s)`);
+                
+                availableCameras = [];
+                
+                for (const device of videoDevices) {
+                    const cameraInfo = {
+                        id: device.deviceId,
+                        label: device.label || `Câmera ${availableCameras.length + 1}`,
+                        facingMode: 'unknown',
+                        maxResolution: { width: 0, height: 0 }
+                    };
+                    
+                    const label = device.label.toLowerCase();
+                    if (label.includes('back') || label.includes('rear') || label.includes('traseira')) {
+                        cameraInfo.facingMode = 'environment';
+                    } else if (label.includes('front') || label.includes('frontal')) {
+                        cameraInfo.facingMode = 'user';
+                    }
+                    
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({
+                            video: { 
+                                deviceId: { exact: device.deviceId },
+                                width: { ideal: 4096 },
+                                height: { ideal: 4096 }
+                            }
+                        });
+                        
+                        const track = stream.getVideoTracks()[0];
+                        const settings = track.getSettings();
+                        cameraInfo.maxResolution = {
+                            width: settings.width,
+                            height: settings.height
+                        };
+                        
+                        stream.getTracks().forEach(t => t.stop());
+                        
+                        log(`  📸 ${cameraInfo.label}: ${settings.width}x${settings.height}`);
+                    } catch (e) {
+                        log(`  ⚠️ ${cameraInfo.label}: Não foi possível testar resolução`);
+                    }
+                    
+                    availableCameras.push(cameraInfo);
+                }
+                
+                bestCamera = availableCameras.reduce((best, current) => {
+                    const bestPixels = best.maxResolution.width * best.maxResolution.height;
+                    const currentPixels = current.maxResolution.width * current.maxResolution.height;
+                    return currentPixels > bestPixels ? current : best;
+                }, availableCameras[0]);
+                
+                log(`🏆 MELHOR CÂMERA: ${bestCamera.label} (${bestCamera.maxResolution.width}x${bestCamera.maxResolution.height})`);
+                
+                cameraSelect.innerHTML = '';
+                availableCameras.forEach((camera, index) => {
+                    const option = document.createElement('option');
+                    option.value = camera.id;
+                    
+                    const isBest = camera.id === bestCamera.id;
+                    const facingIcon = camera.facingMode === 'environment' ? '📷' : 
+                                      camera.facingMode === 'user' ? '🤳' : '📹';
+                    const bestBadge = isBest ? ' 🏆 MELHOR' : '';
+                    
+                    option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
+                    
+                    cameraSelect.appendChild(option);
+                    
+                    if (isBest) {
+                        cameraSelect.value = camera.id;
+                        selectedCameraId = camera.id;
+                    }
+                });
+                
+                cameraSelect.disabled = false;
+                updateCameraInfo();
+                
+                // 📤 ENVIA LISTA DE CÂMERAS PARA O DESKTOP
+                if (socket && roomId) {
+                    socket.emit('camera-list', {
+                        roomId,
+                        cameras: availableCameras.map(c => ({
+                            id: c.id,
+                            label: c.label,
+                            facingMode: c.facingMode,
+                            maxResolution: c.maxResolution,
+                            isBest: c.id === bestCamera.id
+                        })),
+                        selectedCameraId: selectedCameraId
+                    });
+                }
+                
+            } catch (e) {
+                log('❌ Erro ao detectar câmeras: ' + e.message);
+                cameraSelect.innerHTML = '<option>Erro ao detectar câmeras</option>';
+            }
+        }
+
+        function updateCameraInfo() {
+            const camera = availableCameras.find(c => c.id === cameraSelect.value);
+            if (!camera) return;
+            
+            const isBest = camera.id === bestCamera.id;
+            const facingText = camera.facingMode === 'environment' ? 'Traseira' : 
+                              camera.facingMode === 'user' ? 'Frontal' : 'Desconhecida';
+            
+            cameraInfo.innerHTML = `
+                <strong>${camera.label}</strong><br>
+                📍 Posição: ${facingText}<br>
+                📐 Resolução Máxima: ${camera.maxResolution.width}x${camera.maxResolution.height}<br>
+                ${isBest ? '🏆 Esta é a câmera com MELHOR resolução!' : ''}
+            `;
+            cameraInfo.style.display = 'block';
+            cameraInfo.className = isBest ? 'camera-info best' : 'camera-info';
+        }
+
+        cameraSelect.addEventListener('change', () => {
+            selectedCameraId = cameraSelect.value;
+            updateCameraInfo();
+            
+            if (localStream) {
+                restartBtn.style.background = '#FF9800';
+                restartBtn.textContent = '🔄 TROCAR CÂMERA';
+            }
+        });
+
         function applyZoom(zoomLevel) {
             if (!videoTrack) return;
 
@@ -276,22 +442,18 @@
                 return;
             }
 
-            // Limita ao range suportado pela câmera
             const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
             
-            // Atualiza UI instantaneamente (feedback visual)
             currentZoomLevel = clampedZoom;
             const displayZoom = clampedZoom.toFixed(1);
             currentZoom.textContent = displayZoom + 'x';
             zoomIndicator.textContent = `🔍 ${displayZoom}x`;
             zoomInfo.textContent = `Zoom: ${displayZoom}x / Max: ${zoomMax.toFixed(1)}x`;
 
-            // Cancela timer anterior
             if (zoomDebounceTimer) {
                 clearTimeout(zoomDebounceTimer);
             }
 
-            // Aplica zoom apenas 200ms DEPOIS de parar de mover (debounce)
             zoomDebounceTimer = setTimeout(async () => {
                 try {
                     await videoTrack.applyConstraints({
@@ -300,7 +462,6 @@
 
                     log(`🔍 Zoom aplicado: ${clampedZoom.toFixed(1)}x`);
 
-                    // Envia para o desktop
                     if (socket && roomId) {
                         socket.emit('zoom-update', { 
                             roomId, 
@@ -312,7 +473,7 @@
                 } catch (e) {
                     log('❌ Erro ao aplicar zoom: ' + e.message);
                 }
-            }, 200); // 200ms de espera após parar de mover
+            }, 200);
         }
 
         async function startCamera() {
@@ -330,7 +491,7 @@
 
                 const constraints = {
                     video: {
-                        facingMode: 'environment',
+                        deviceId: selectedCameraId ? { exact: selectedCameraId } : undefined,
                         width: { ideal: width },
                         height: { ideal: height },
                         frameRate: { ideal: fps }
@@ -345,7 +506,13 @@
                 const settings = videoTrack.getSettings();
                 const capabilities = videoTrack.getCapabilities();
 
-                // 🔍 Detecta capacidades de zoom
+                // Atualiza nome da câmera
+                const camera = availableCameras.find(c => c.id === settings.deviceId);
+                if (camera) {
+                    currentCamera.textContent = camera.label;
+                    log(`📸 Câmera ativa: ${camera.label}`);
+                }
+
                 if (capabilities.zoom) {
                     zoomMin = capabilities.zoom.min || 1.0;
                     zoomMax = capabilities.zoom.max || 10.0;
@@ -354,7 +521,6 @@
                     log(`✅ Zoom disponível: Min ${zoomMin.toFixed(1)}x - Max ${zoomMax.toFixed(1)}x`);
                     zoomInfo.textContent = `Zoom: ${currentZoomLevel.toFixed(1)}x / Max: ${zoomMax.toFixed(1)}x`;
                     
-                    // Envia capacidades para o desktop
                     if (socket && roomId) {
                         socket.emit('zoom-capabilities', { 
                             roomId, 
@@ -446,6 +612,10 @@
             if (!roomId) return alert('⚠️ Digite um ID!');
 
             startBtn.disabled = true;
+            
+            // Detecta câmeras primeiro
+            await detectCameras();
+            
             const success = await startCamera();
             if (!success) {
                 startBtn.disabled = false;
@@ -458,6 +628,21 @@
                 log('✅ Socket conectado');
                 updateStatus('Socket OK');
                 socket.emit('join-room', roomId);
+                
+                // Envia lista de câmeras após conectar
+                setTimeout(() => {
+                    socket.emit('camera-list', {
+                        roomId,
+                        cameras: availableCameras.map(c => ({
+                            id: c.id,
+                            label: c.label,
+                            facingMode: c.facingMode,
+                            maxResolution: c.maxResolution,
+                            isBest: c.id === bestCamera.id
+                        })),
+                        selectedCameraId: selectedCameraId
+                    });
+                }, 500);
             });
 
             socket.on('user-joined', async (userId) => {
@@ -471,7 +656,6 @@
                     socket.emit('offer', { roomId, offer });
                     log('📤 OFFER enviada');
                     
-                    // Envia capacidades de zoom após conectar
                     setTimeout(() => {
                         if (videoTrack) {
                             const capabilities = videoTrack.getCapabilities();
@@ -484,6 +668,19 @@
                                 });
                             }
                         }
+                        
+                        // Reenvia lista de câmeras
+                        socket.emit('camera-list', {
+                            roomId,
+                            cameras: availableCameras.map(c => ({
+                                id: c.id,
+                                label: c.label,
+                                facingMode: c.facingMode,
+                                maxResolution: c.maxResolution,
+                                isBest: c.id === bestCamera.id
+                            })),
+                            selectedCameraId: selectedCameraId
+                        });
                     }, 1000);
                 }, 1000);
             });
@@ -500,12 +697,22 @@
                 }
             });
 
-            // 🔍 RECEBER COMANDO DE ZOOM DO DESKTOP
             socket.on('camera-control', (data) => {
                 if (data.control === 'zoom') {
                     applyZoom(data.value);
                 } else {
                     applyCommand(data);
+                }
+            });
+
+            // 📹 RECEBER COMANDO PARA TROCAR CÂMERA DO DESKTOP
+            socket.on('change-camera', (data) => {
+                if (data.cameraId) {
+                    log(`🖥️ Desktop solicitou troca para: ${data.cameraId}`);
+                    selectedCameraId = data.cameraId;
+                    cameraSelect.value = data.cameraId;
+                    updateCameraInfo();
+                    restartCamera();
                 }
             });
 
@@ -561,7 +768,6 @@
                 videoTrack = newTrack;
                 await applyEncoderSettings();
                 
-                // Reaplicar zoom após restart
                 setTimeout(() => {
                     applyZoom(previousZoom);
                 }, 500);

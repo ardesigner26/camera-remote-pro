@@ -46,7 +46,6 @@
             margin-bottom: 15px;
             min-height: 400px;
         }
-        /* 🔍 INDICADOR DE ZOOM NO DESKTOP */
         .zoom-indicator-desktop {
             position: absolute;
             top: 20px;
@@ -139,6 +138,10 @@
             font-size: 14px;
             margin-bottom: 10px;
         }
+        select option {
+            background: #2a2a2a;
+            color: #fff;
+        }
         input[type="range"] {
             width: 100%;
             height: 8px;
@@ -184,6 +187,19 @@
             color: #FF9800;
             text-align: center;
         }
+        .camera-info-desktop {
+            background: rgba(0,255,0,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            border: 1px solid #0f0;
+        }
+        .camera-info-desktop.best {
+            background: rgba(255,215,0,0.1);
+            border-color: #FFD700;
+            color: #FFD700;
+        }
         @media (max-width: 1024px) {
             .main-grid { grid-template-columns: 1fr; }
         }
@@ -192,7 +208,7 @@
 <body>
     <div class="header">
         <h1>🖥️ CAMERA REMOTE PRO</h1>
-        <div class="subtitle">⚡ LATÊNCIA ULTRA BAIXA - Zero Buffer</div>
+        <div class="subtitle">⚡ Controle Total de Câmeras + Latência Ultra Baixa</div>
     </div>
 
     <div class="main-grid">
@@ -210,6 +226,19 @@
                 <input type="text" id="roomIdInput" placeholder="Digite o ID da sala">
                 <button id="connectBtn">🚀 CONECTAR</button>
                 <div class="status-badge" id="statusBadge">Desconectado</div>
+            </div>
+
+            <div class="section-title">📹 SELECIONAR CÂMERA (Controle Remoto)</div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>📸 CÂMERA ATIVA</span>
+                </div>
+                <select id="cameraSelectDesktop" disabled>
+                    <option value="">Aguardando conexão...</option>
+                </select>
+                <div class="camera-info-desktop" id="cameraInfoDesktop" style="display:none;"></div>
+                <button class="update" id="changeCameraBtn" disabled>📹 TROCAR CÂMERA NO CELULAR</button>
             </div>
 
             <div class="section-title">📹 CONFIGURAÇÕES DE VÍDEO (Controle Remoto)</div>
@@ -304,6 +333,10 @@
         const statusBadge = document.getElementById('statusBadge');
         const roomIdInput = document.getElementById('roomIdInput');
         
+        const cameraSelectDesktop = document.getElementById('cameraSelectDesktop');
+        const cameraInfoDesktop = document.getElementById('cameraInfoDesktop');
+        const changeCameraBtn = document.getElementById('changeCameraBtn');
+        
         const resolutionSelect = document.getElementById('resolutionSelect');
         const bitrateSelect = document.getElementById('bitrateSelect');
         const fpsSelect = document.getElementById('fpsSelect');
@@ -325,6 +358,7 @@
 
         let socket, peerConnection, roomId;
         let currentLatency = 0;
+        let availableCamerasDesktop = [];
 
         const config = {
             iceServers: [
@@ -340,41 +374,33 @@
             console.log(message);
         }
 
-        // ⚡ FUNÇÃO QUE APLICA LATÊNCIA ZERO NO VÍDEO
         function applyUltraLowLatency(latencyMs) {
             if (!remoteVideo) return;
 
             currentLatency = latencyMs;
-
-            // Converte ms para segundos
             const latencySeconds = latencyMs / 1000;
 
             try {
-                // ⚡ LATÊNCIA ZERO - playoutDelayHint
                 if (remoteVideo.playoutDelayHint !== undefined) {
                     remoteVideo.playoutDelayHint = latencySeconds;
                     log(`⚡ playoutDelayHint = ${latencyMs}ms`);
                 }
 
-                // ⚡ Desabilita preload se latência = 0
                 if (latencyMs === 0) {
                     remoteVideo.preload = 'none';
                     log('⚡ Preload desabilitado');
                 }
 
-                // ⚡ Configura receivers WebRTC
                 if (peerConnection) {
                     const receivers = peerConnection.getReceivers();
                     receivers.forEach(receiver => {
                         if (receiver.track && receiver.track.kind === 'video') {
                             try {
-                                // playoutDelayHint no receiver
                                 if (receiver.playoutDelayHint !== undefined) {
                                     receiver.playoutDelayHint = latencySeconds;
                                     log(`⚡ receiver.playoutDelayHint = ${latencyMs}ms`);
                                 }
                                 
-                                // jitterBufferTarget (Chrome/Edge)
                                 if (receiver.jitterBufferTarget !== undefined) {
                                     receiver.jitterBufferTarget = latencyMs;
                                     log(`⚡ jitterBufferTarget = ${latencyMs}ms`);
@@ -392,6 +418,28 @@
                 log(`❌ Erro ao aplicar latência: ${e.message}`);
             }
         }
+
+        // 📹 ATUALIZA INFO DA CÂMERA SELECIONADA NO DESKTOP
+        function updateCameraInfoDesktop() {
+            const camera = availableCamerasDesktop.find(c => c.id === cameraSelectDesktop.value);
+            if (!camera) return;
+            
+            const facingText = camera.facingMode === 'environment' ? 'Traseira' : 
+                              camera.facingMode === 'user' ? 'Frontal' : 'Desconhecida';
+            
+            cameraInfoDesktop.innerHTML = `
+                <strong>${camera.label}</strong><br>
+                📍 Posição: ${facingText}<br>
+                📐 Resolução Máxima: ${camera.maxResolution.width}x${camera.maxResolution.height}<br>
+                ${camera.isBest ? '🏆 Esta é a câmera com MELHOR resolução!' : ''}
+            `;
+            cameraInfoDesktop.style.display = 'block';
+            cameraInfoDesktop.className = camera.isBest ? 'camera-info-desktop best' : 'camera-info-desktop';
+        }
+
+        cameraSelectDesktop.addEventListener('change', () => {
+            updateCameraInfoDesktop();
+        });
 
         connectBtn.onclick = () => {
             roomId = roomIdInput.value.trim();
@@ -422,7 +470,6 @@
                     log('📺 VÍDEO RECEBIDO!');
                     remoteVideo.srcObject = event.streams[0];
                     
-                    // ⚡ APLICA LATÊNCIA ZERO IMEDIATAMENTE
                     setTimeout(() => {
                         applyUltraLowLatency(currentLatency);
                     }, 100);
@@ -463,19 +510,49 @@
                 }
             });
 
-            // 🔍 RECEBER ATUALIZAÇÕES DE ZOOM DO MOBILE
+            // 📹 RECEBER LISTA DE CÂMERAS DO MOBILE
+            socket.on('camera-list', (data) => {
+                if (data.cameras && data.cameras.length > 0) {
+                    log(`📹 Recebidas ${data.cameras.length} câmera(s) do celular`);
+                    
+                    availableCamerasDesktop = data.cameras;
+                    
+                    cameraSelectDesktop.innerHTML = '';
+                    data.cameras.forEach((camera) => {
+                        const option = document.createElement('option');
+                        option.value = camera.id;
+                        
+                        const facingIcon = camera.facingMode === 'environment' ? '📷' : 
+                                          camera.facingMode === 'user' ? '🤳' : '📹';
+                        const bestBadge = camera.isBest ? ' 🏆 MELHOR' : '';
+                        
+                        option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
+                        
+                        cameraSelectDesktop.appendChild(option);
+                        
+                        if (camera.id === data.selectedCameraId) {
+                            cameraSelectDesktop.value = camera.id;
+                        }
+                    });
+                    
+                    cameraSelectDesktop.disabled = false;
+                    changeCameraBtn.disabled = false;
+                    updateCameraInfoDesktop();
+                    
+                    log(`✅ Lista de câmeras atualizada`);
+                }
+            });
+
             socket.on('zoom-update', (data) => {
                 if (data.zoom !== undefined) {
                     const zoomVal = parseFloat(data.zoom);
                     zoomValue.textContent = zoomVal.toFixed(1) + 'x';
                     
-                    // Mostrar indicador no vídeo
                     zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
                     zoomIndicatorDesktop.style.display = 'block';
                 }
             });
 
-            // 🔍 RECEBER CAPACIDADES DE ZOOM DO MOBILE
             socket.on('zoom-capabilities', (data) => {
                 if (data.zoomMin !== undefined && data.zoomMax !== undefined) {
                     zoomSlider.min = data.zoomMin;
@@ -484,7 +561,6 @@
                     
                     log(`✅ Zoom range: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
                     
-                    // Atualizar valor atual
                     if (data.currentZoom) {
                         const zoomVal = parseFloat(data.currentZoom);
                         zoomSlider.value = zoomVal;
@@ -509,9 +585,27 @@
                 zoomSlider.disabled = true;
                 isoSlider.disabled = true;
                 exposureSlider.disabled = true;
+                cameraSelectDesktop.disabled = true;
+                changeCameraBtn.disabled = true;
                 
                 zoomIndicatorDesktop.style.display = 'none';
             });
+        };
+
+        // 📹 TROCAR CÂMERA REMOTAMENTE
+        changeCameraBtn.onclick = () => {
+            const selectedCameraId = cameraSelectDesktop.value;
+            if (!selectedCameraId) {
+                alert('⚠️ Selecione uma câmera!');
+                return;
+            }
+            
+            const camera = availableCamerasDesktop.find(c => c.id === selectedCameraId);
+            if (camera) {
+                log(`📹 Solicitando troca para: ${camera.label}`);
+                socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
+                alert(`✅ Comando enviado! O celular vai trocar para: ${camera.label}`);
+            }
         };
 
         updateResolutionBtn.onclick = () => {
@@ -535,12 +629,10 @@
             alert(`✅ Comando enviado! O celular vai aplicar ${value} FPS`);
         };
 
-        // ⚡ CONTROLE DE LATÊNCIA EM TEMPO REAL
         latencySlider.addEventListener('input', function() {
             const latency = parseInt(this.value);
             latencyValue.textContent = latency + 'ms';
             
-            // Aplica latência no vídeo
             applyUltraLowLatency(latency);
             
             log(`⏱️ Latência ajustada para: ${latency}ms`);
@@ -552,17 +644,14 @@
             }
         }
 
-        // 🔍 ZOOM COM DEBOUNCE
         let zoomDebounceTimer = null;
         zoomSlider.addEventListener('input', function() {
             const value = parseFloat(zoomSlider.value);
             zoomValue.textContent = value.toFixed(1) + 'x';
             
-            // Atualizar indicador visual
             zoomIndicatorDesktop.textContent = `🔍 ${value.toFixed(1)}x`;
             zoomIndicatorDesktop.style.display = 'block';
             
-            // Debounce: envia só quando parar de mover
             if (zoomDebounceTimer) {
                 clearTimeout(zoomDebounceTimer);
             }
