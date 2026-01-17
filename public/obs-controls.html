@@ -51,6 +51,10 @@
             background: #28a745;
             color: white;
         }
+        .status-waiting {
+            background: #ffc107;
+            color: #000;
+        }
         .room-info {
             font-weight: bold;
             color: #667eea;
@@ -127,16 +131,34 @@
             margin-top: 20px;
         }
         .log-entry { margin-bottom: 5px; }
+        .camera-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎛️ OBS CONTROLS PANEL</h1>
-        <p class="subtitle">Controle remoto para câmera no OBS</p>
+        <p class="subtitle">Controle remoto completo para câmera no OBS</p>
 
         <div class="status-bar">
             <div class="room-info">📡 Sala: <span id="roomName">-</span></div>
             <div class="status-badge status-connected" id="statusBadge">Conectado</div>
+        </div>
+
+        <!-- SELEÇÃO DE CÂMERA -->
+        <div class="control-section">
+            <h2>📹 CÂMERA</h2>
+            <div class="control-row">
+                <label>Câmera Ativa:</label>
+                <select id="cameraSelect">
+                    <option>Aguardando lista do mobile...</option>
+                </select>
+            </div>
+            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver câmeras disponíveis</div>
+            <button id="changeCameraBtn">🔄 TROCAR CÂMERA</button>
         </div>
 
         <!-- ZOOM -->
@@ -167,6 +189,19 @@
             <button id="updateResolutionBtn">🔄 APLICAR RESOLUÇÃO</button>
 
             <div class="control-row">
+                <label>Bitrate:</label>
+                <select id="bitrateSelect">
+                    <option value="1">1 Mbps (Baixo)</option>
+                    <option value="2.5">2.5 Mbps</option>
+                    <option value="5" selected>5 Mbps (Médio)</option>
+                    <option value="10">10 Mbps (Alto)</option>
+                    <option value="20">20 Mbps (Muito Alto)</option>
+                    <option value="50">50 Mbps (Ultra)</option>
+                </select>
+            </div>
+            <button id="updateBitrateBtn">🔄 APLICAR BITRATE</button>
+
+            <div class="control-row">
                 <label>FPS:</label>
                 <select id="fpsSelect">
                     <option value="24">24 FPS (Cinema)</option>
@@ -177,9 +212,25 @@
             <button id="updateFpsBtn">🔄 APLICAR FPS</button>
         </div>
 
+        <!-- LATÊNCIA -->
+        <div class="control-section">
+            <h2>⚡ LATÊNCIA</h2>
+            <div class="control-row">
+                <label>Buffer de Latência:</label>
+                <select id="latencySelect">
+                    <option value="0">0ms (Ultra Baixa)</option>
+                    <option value="50">50ms (Muito Baixa)</option>
+                    <option value="100" selected>100ms (Baixa)</option>
+                    <option value="200">200ms (Normal)</option>
+                    <option value="500">500ms (Alta)</option>
+                </select>
+            </div>
+            <button id="updateLatencyBtn">🔄 APLICAR LATÊNCIA</button>
+        </div>
+
         <!-- CONTROLES DE CÂMERA -->
         <div class="control-section">
-            <h2>🎚️ CONTROLES DE CÂMERA</h2>
+            <h2>🎚️ CONTROLES AVANÇADOS</h2>
             
             <div class="control-row">
                 <label>📷 ISO:</label>
@@ -213,19 +264,28 @@
 
         document.getElementById('roomName').textContent = roomId || 'Não definida';
 
+        const statusBadge = document.getElementById('statusBadge');
         const logContainer = document.getElementById('logContainer');
+        const cameraSelect = document.getElementById('cameraSelect');
+        const cameraInfo = document.getElementById('cameraInfo');
+        const changeCameraBtn = document.getElementById('changeCameraBtn');
         const zoomSlider = document.getElementById('zoomSlider');
         const zoomValue = document.getElementById('zoomValue');
         const resolutionSelect = document.getElementById('resolutionSelect');
         const updateResolutionBtn = document.getElementById('updateResolutionBtn');
+        const bitrateSelect = document.getElementById('bitrateSelect');
+        const updateBitrateBtn = document.getElementById('updateBitrateBtn');
         const fpsSelect = document.getElementById('fpsSelect');
         const updateFpsBtn = document.getElementById('updateFpsBtn');
+        const latencySelect = document.getElementById('latencySelect');
+        const updateLatencyBtn = document.getElementById('updateLatencyBtn');
         const isoSlider = document.getElementById('isoSlider');
         const isoValue = document.getElementById('isoValue');
         const exposureSlider = document.getElementById('exposureSlider');
         const exposureValue = document.getElementById('exposureValue');
 
         let socket;
+        let availableCameras = [];
 
         function log(message) {
             const time = new Date().toLocaleTimeString();
@@ -236,6 +296,11 @@
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
+        function updateStatus(text, type = 'connected') {
+            statusBadge.textContent = text;
+            statusBadge.className = 'status-badge status-' + type;
+        }
+
         if (roomId) {
             socket = io();
 
@@ -244,7 +309,51 @@
                 socket.emit('join-room', roomId);
                 log(`📡 Entrou na sala: ${roomId}`);
                 log('✅ CONTROLES PRONTOS!');
+                updateStatus('Conectado', 'connected');
+                
+                // Solicitar lista de câmeras do mobile
+                setTimeout(() => {
+                    socket.emit('request-camera-list', { roomId });
+                    log('📡 Solicitando lista de câmeras...');
+                }, 1000);
             });
+
+            // Receber lista de câmeras
+            socket.on('camera-list', (data) => {
+                if (data.cameras && data.cameras.length > 0) {
+                    log(`📹 Recebidas ${data.cameras.length} câmera(s) do celular`);
+                    
+                    availableCameras = data.cameras;
+                    cameraSelect.innerHTML = '';
+                    
+                    data.cameras.forEach((camera) => {
+                        const option = document.createElement('option');
+                        option.value = camera.id;
+                        
+                        const facingIcon = camera.facingMode === 'environment' ? '📷' :
+                                          camera.facingMode === 'user' ? '🤳' : '📹';
+                        const bestBadge = camera.isBest ? ' 🏆' : '';
+                        
+                        option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
+                        
+                        cameraSelect.appendChild(option);
+                        
+                        if (camera.id === data.selectedCameraId) {
+                            cameraSelect.value = camera.id;
+                        }
+                    });
+                    
+                    cameraInfo.textContent = `✅ ${data.cameras.length} câmera(s) disponível(is)`;
+                    cameraInfo.style.color = '#28a745';
+                }
+            });
+
+            // TROCAR CÂMERA
+            changeCameraBtn.onclick = () => {
+                const selectedCameraId = cameraSelect.value;
+                socket.emit('camera-control', { roomId, control: 'switch-camera', value: selectedCameraId });
+                log(`📹 Trocando para: ${cameraSelect.options[cameraSelect.selectedIndex].text}`);
+            };
 
             // RESOLUÇÃO
             updateResolutionBtn.onclick = () => {
@@ -253,11 +362,25 @@
                 log(`📺 Resolução: ${value}`);
             };
 
+            // BITRATE
+            updateBitrateBtn.onclick = () => {
+                const value = bitrateSelect.value;
+                socket.emit('change-config', { roomId, type: 'bitrate', value });
+                log(`📊 Bitrate: ${value} Mbps`);
+            };
+
             // FPS
             updateFpsBtn.onclick = () => {
                 const value = fpsSelect.value;
                 socket.emit('change-config', { roomId, type: 'fps', value });
                 log(`🎬 FPS: ${value}`);
+            };
+
+            // LATÊNCIA
+            updateLatencyBtn.onclick = () => {
+                const value = latencySelect.value;
+                socket.emit('change-config', { roomId, type: 'latency', value });
+                log(`⚡ Latência: ${value}ms`);
             };
 
             // ZOOM
@@ -304,6 +427,7 @@
 
             socket.on('disconnect', () => {
                 log('❌ Desconectado');
+                updateStatus('Desconectado', 'waiting');
             });
         }
     </script>
