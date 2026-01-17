@@ -667,6 +667,12 @@
                 await restartCamera();
             });
 
+
+            socket.on('request-camera-list', () => {
+                console.log('?? Desktop solicitou lista de câmeras');
+                sendCameraListToDesktop();
+            });
+
             socket.on('disconnect', () => {
                 log('âŒ Desconectado');
                 updateStatus('Desconectado');
