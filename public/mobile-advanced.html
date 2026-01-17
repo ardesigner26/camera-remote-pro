@@ -663,6 +663,9 @@
                 if (data.type === 'fps' && data.value) {
                     fpsSelect.value = data.value;
                 }
+                if (data.type === 'latency' && data.value) {
+                    latencySelect.value = data.value;
+                }
                 
                 await restartCamera();
             });
