@@ -47,6 +47,11 @@ io.on('connection', (socket) => {
         socket.to(data.roomId).emit('change-config', data);
     });
 
+    socket.on('change-camera', (data) => {
+        console.log('?? Trocar câmera:', data.cameraId, 'na sala', data.roomId);
+        socket.to(data.roomId).emit('change-camera', data);
+    });
+
 
     socket.on('camera-list', (data) => {
         console.log('?? Lista de câmeras recebida:', data.cameras ? data.cameras.length : 0, 'câmera(s)');
