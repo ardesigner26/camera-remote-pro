@@ -219,13 +219,16 @@
         <div class="config-section">
             <div class="config-title">📊 BITRATE</div>
             <select id="bitrateSelect">
-                <option value="2000000">2 Mbps (Ultra Baixa Latência)</option>
-                <option value="5000000">5 Mbps (Baixa Latência)</option>
-                <option value="10000000">10 Mbps (Média)</option>
-                <option value="15000000" selected>15 Mbps (Mais ou Menos)</option>
-                <option value="20000000">20 Mbps (Alta)</option>
-                <option value="30000000">30 Mbps (Ultra)</option>
-                <option value="50000000">50 Mbps (Máxima - 4K)</option>
+                <option value="5000000">5 Mbps</option>
+                <option value="10000000" selected>10 Mbps</option>
+                <option value="15000000">15 Mbps</option>
+                <option value="20000000">20 Mbps</option>
+                <option value="25000000">25 Mbps</option>
+                <option value="30000000">30 Mbps</option>
+                <option value="35000000">35 Mbps</option>
+                <option value="40000000">40 Mbps</option>
+                <option value="45000000">45 Mbps</option>
+                <option value="50000000">50 Mbps</option>
             </select>
         </div>
 
@@ -576,7 +579,7 @@
             }
 
             parameters.encodings[0].maxBitrate = bitrate;
-            parameters.encodings[0].minBitrate = Math.floor(bitrate * 0.8);
+            parameters.encodings[0].minBitrate = Math.floor(bitrate * 0.95);
             parameters.encodings[0].maxFramerate = fps;
             parameters.encodings[0].priority = 'high';
             parameters.encodings[0].networkPriority = 'high';
