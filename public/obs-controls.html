@@ -148,7 +148,7 @@
             <div class="status-badge status-connected" id="statusBadge">Conectado</div>
         </div>
 
-        <!-- SELEÇÃO DE CÂMERA -->
+        <!-- SELE��O DE CÂMERA -->
         <div class="control-section">
             <h2>📹 CÂMERA</h2>
             <div class="control-row">
@@ -157,7 +157,7 @@
                     <option>Aguardando lista do mobile...</option>
                 </select>
             </div>
-            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver câmeras disponíveis</div>
+            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver CÂMERAs dispon�veis</div>
             <button id="changeCameraBtn">🔄 TROCAR CÂMERA</button>
         </div>
 
@@ -209,18 +209,18 @@
                 <label>FPS:</label>
                 <select id="fpsSelect">
                     <option value="24">24 FPS (Cinema)</option>
-                    <option value="30" selected>30 FPS (Padrão)</option>
+                    <option value="30" selected>30 FPS (Padr�o)</option>
                     <option value="60">60 FPS (Suave)</option>
                 </select>
             </div>
             <button id="updateFpsBtn">✅ APLICAR FPS</button>
         </div>
 
-        <!-- LATÊNCIA -->
+        <!-- LAT�NCIA -->
         <div class="control-section">
-            <h2>? LATÊNCIA</h2>
+            <h2>? LAT�NCIA</h2>
             <div class="control-row">
-                <label>Buffer de LATÊNCIA:</label>
+                <label>Buffer de Lat�ncia:</label>
                 <select id="latencySelect">
                     <option value="0">0ms (Ultra Baixa)</option>
                     <option value="50">50ms (Muito Baixa)</option>
@@ -229,15 +229,15 @@
                     <option value="500">500ms (Alta)</option>
                 </select>
             </div>
-            <button id="updateLatencyBtn">?? APLICAR LATÊNCIA</button>
+            <button id="updateLatencyBtn">?? APLICAR LAT�NCIA</button>
         </div>
 
         <!-- CONTROLES DE CÂMERA -->
         <div class="control-section">
-            <h2>⚙️ CONTROLES AVANÇADOS</h2>
+            <h2>??? CONTROLES AVAN�ADOS</h2>
             
             <div class="control-row">
-                <label>📷 ISO:</label>
+                <label>?? ISO:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="range" id="isoSlider" min="100" max="3200" step="100" value="400">
                     <span class="slider-value" id="isoValue">400</span>
@@ -245,7 +245,7 @@
             </div>
 
             <div class="control-row">
-                <label>☀️ EXPOSIÇÃO:</label>
+                <label>?? Exposi��o:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
                     <span class="slider-value" id="exposureValue">0.0</span>
@@ -263,10 +263,10 @@
         const roomId = urlParams.get('room');
 
         if (!roomId) {
-            alert('⚠️ ERRO: Adicione ?room=SEUID na URL\n\nExemplo: obs-controls.html?room=Culto');
+            alert('? ERRO: Adicione ?room=SEUID na URL\n\nExemplo: obs-controls.html?room=Culto');
         }
 
-        document.getElementById('roomName').textContent = roomId || 'Não definida';
+        document.getElementById('roomName').textContent = roomId || 'N�o definida';
 
         const statusBadge = document.getElementById('statusBadge');
         const logContainer = document.getElementById('logContainer');
@@ -309,16 +309,16 @@
             socket = io();
 
             socket.on('connect', () => {
-                log('🔌 Socket.io conectado');
+                log('? Socket.io conectado');
                 socket.emit('join-room', roomId);
                 log(`?? Entrou na sala: ${roomId}`);
-                log('✅ CONTROLES PRONTOS!');
+                log('? CONTROLES PRONTOS!');
                 updateStatus('Conectado', 'connected');
                 
                 // Solicitar lista de CÂMERAs do mobile
                 setTimeout(() => {
                     socket.emit('request-camera-list', { roomId });
-                    log('📹 Solicitando lista de câmeras...');
+                    log('?? Solicitando lista de CÂMERAs...');
                 }, 1000);
             });
 
@@ -334,9 +334,9 @@
                         const option = document.createElement('option');
                         option.value = camera.id;
                         
-                        const facingIcon = camera.facingMode === 'environment' ? '📷' :
-                                          camera.facingMode === 'user' ? '🤳' : '📹';
-                        const bestBadge = camera.isBest ? ' ⭐' : '';
+                        const facingIcon = camera.facingMode === 'environment' ? '??' :
+                                          camera.facingMode === 'user' ? '??' : '??';
+                        const bestBadge = camera.isBest ? ' ??' : '';
                         
                         option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
                         
@@ -347,7 +347,7 @@
                         }
                     });
                     
-                    cameraInfo.textContent = `📹 ${data.cameras.length} câmera(s) disponível(is)`;
+                    cameraInfo.textContent = `? ${data.cameras.length} CÂMERA(s) dispon�vel(is)`;
                     cameraInfo.style.color = '#28a745';
                 }
             });
@@ -380,11 +380,11 @@
                 log(`?? FPS: ${value}`);
             };
 
-            // LATÊNCIA
+            // LAT�NCIA
             updateLatencyBtn.onclick = () => {
                 const value = latencySelect.value;
                 socket.emit('change-config', { roomId, type: 'latency', value });
-                log(`? LATÊNCIA: ${value}ms`);
+                log(`? Lat�ncia: ${value}ms`);
             };
 
             // ZOOM
@@ -411,11 +411,11 @@
                 
                 isoDebounceTimer = setTimeout(() => {
                     socket.emit('camera-control', { roomId, control: 'iso', value });
-                    log(`📷 ISO: ${value}`);
+                    log(`?? ISO: ${value}`);
                 }, 150);
             });
 
-            // EXPOSIÇÃO
+            // EXPOSI��O
             let exposureDebounceTimer = null;
             exposureSlider.addEventListener('input', function() {
                 const value = exposureSlider.value;
@@ -425,12 +425,12 @@
                 
                 exposureDebounceTimer = setTimeout(() => {
                     socket.emit('camera-control', { roomId, control: 'exposure', value });
-                    log(`☀️ EXPOSIÇÃO: ${value}`);
+                    log(`?? Exposi��o: ${value}`);
                 }, 150);
             });
 
             socket.on('disconnect', () => {
-                log('🔴 Desconectado');
+                log('? Desconectado');
                 updateStatus('Desconectado', 'waiting');
             });
         }
