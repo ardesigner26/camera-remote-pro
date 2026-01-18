@@ -157,7 +157,7 @@
                     <option>Aguardando lista do mobile...</option>
                 </select>
             </div>
-            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver CÂMERAs dispon�veis</div>
+            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver câmeras disponíveis</div>
             <button id="changeCameraBtn">🔄 TROCAR CÂMERA</button>
         </div>
 
@@ -237,7 +237,7 @@
             <h2>??? CONTROLES AVAN�ADOS</h2>
             
             <div class="control-row">
-                <label>?? ISO:</label>
+                <label>📷 ISO:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="range" id="isoSlider" min="100" max="3200" step="100" value="400">
                     <span class="slider-value" id="isoValue">400</span>
@@ -245,7 +245,7 @@
             </div>
 
             <div class="control-row">
-                <label>?? Exposi��o:</label>
+                <label>?? EXPOSIÇÃO:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
                     <span class="slider-value" id="exposureValue">0.0</span>
@@ -347,7 +347,7 @@
                         }
                     });
                     
-                    cameraInfo.textContent = `? ${data.cameras.length} CÂMERA(s) dispon�vel(is)`;
+                    cameraInfo.textContent = `📹 ${data.cameras.length} câmera(s) disponível(is)`;
                     cameraInfo.style.color = '#28a745';
                 }
             });
@@ -411,11 +411,11 @@
                 
                 isoDebounceTimer = setTimeout(() => {
                     socket.emit('camera-control', { roomId, control: 'iso', value });
-                    log(`?? ISO: ${value}`);
+                    log(`📷 ISO: ${value}`);
                 }, 150);
             });
 
-            // EXPOSI��O
+            // EXPOSIÇÃO
             let exposureDebounceTimer = null;
             exposureSlider.addEventListener('input', function() {
                 const value = exposureSlider.value;
@@ -425,7 +425,7 @@
                 
                 exposureDebounceTimer = setTimeout(() => {
                     socket.emit('camera-control', { roomId, control: 'exposure', value });
-                    log(`?? Exposi��o: ${value}`);
+                    log(`?? EXPOSIÇÃO: ${value}`);
                 }, 150);
             });
 
