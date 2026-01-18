@@ -432,7 +432,7 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-                console.log('?? CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log('📹 CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
             if (!capabilities.zoom) return;
 
             const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
@@ -494,7 +494,7 @@
 
                 const settings = videoTrack.getSettings();
                 const capabilities = videoTrack.getCapabilities();
-                console.log('?? CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log('📹 CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
 
                 const cam = availableCameras.find(c => c.id === settings.deviceId);
                 if (cam) {
@@ -677,7 +677,7 @@
 
 
             socket.on('request-camera-list', () => {
-                console.log('?? Desktop solicitou lista de c�meras');
+                console.log('🖥️ Desktop solicitou lista de câmeras');
                 sendCameraListToDesktop();
             });
 
@@ -729,7 +729,7 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-                console.log('?? CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log('📹 CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
 
             if (data.control === 'iso' && capabilities.iso) {
                 const val = parseInt(data.value);
