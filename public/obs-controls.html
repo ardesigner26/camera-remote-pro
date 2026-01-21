@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎛️ OBS Controls Panel</title>
+    <title>ðŸŽ›ï¸ OBS Controls Panel</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -136,34 +136,65 @@
             color: #666;
             margin-top: 5px;
         }
-    </style>
+    
+        #stats-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            z-index: 1000;
+            border: 2px solid #0f0;
+            min-width: 300px;
+        }
+        #stats-panel .stat-line {
+            margin: 3px 0;
+        }
+        #stats-panel .stat-warning { color: #ff0; }
+        #stats-panel .stat-error { color: #f00; }
+        #stats-panel .stat-ok { color: #0f0; }
+        </style>
 </head>
 <body>
+    <div id="stats-panel">
+        <div class="stat-line">📊 <strong>QUALIDADE REAL</strong></div>
+        <div class="stat-line" id="stat-resolution">📹 Resolução: --</div>
+        <div class="stat-line" id="stat-fps">🎬 FPS: --</div>
+        <div class="stat-line" id="stat-bitrate">📡 Bitrate: --</div>
+        <div class="stat-line" id="stat-codec">🔴 Codec: --</div>
+        <div class="stat-line" id="stat-packets">📦 Perda: --</div>
+        <div class="stat-line" id="stat-quality">⚠️ Status: --</div>
+    </div>
     <div class="container">
-        <h1>🎛️ OBS CONTROLS PANEL</h1>
-        <p class="subtitle">Controle remoto completo para CÂMERA no OBS</p>
+        <h1>ðŸŽ›ï¸ OBS CONTROLS PANEL</h1>
+        <p class="subtitle">Controle remoto completo para CÃ‚MERA no OBS</p>
 
         <div class="status-bar">
-            <div class="room-info">📡 Sala: <span id="roomName">-</span></div>
+            <div class="room-info">ðŸ“¡ Sala: <span id="roomName">-</span></div>
             <div class="status-badge status-connected" id="statusBadge">Conectado</div>
         </div>
 
-        <!-- SELE��O DE CÂMERA -->
+        <!-- SELEï¿½ï¿½O DE CÃ‚MERA -->
         <div class="control-section">
-            <h2>📹 CÂMERA</h2>
+            <h2>ðŸ“¹ CÃ‚MERA</h2>
             <div class="control-row">
-                <label>CÂMERA Ativa:</label>
+                <label>CÃ‚MERA Ativa:</label>
                 <select id="cameraSelect">
                     <option>Aguardando lista do mobile...</option>
                 </select>
             </div>
-            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver CÂMERAs dispon�veis</div>
-            <button id="changeCameraBtn">🔄 TROCAR CÂMERA</button>
+            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver CÃ‚MERAs disponï¿½veis</div>
+            <button id="changeCameraBtn">ðŸ”„ TROCAR CÃ‚MERA</button>
         </div>
 
         <!-- ZOOM -->
         <div class="control-section">
-            <h2>🔍 ZOOM</h2>
+            <h2>ðŸ” ZOOM</h2>
             <div class="control-row">
                 <label>Zoom Digital:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -173,12 +204,12 @@
             </div>
         </div>
 
-        <!-- QUALIDADE DE VÍDEO -->
+        <!-- QUALIDADE DE VÃDEO -->
         <div class="control-section">
-            <h2>⚙️ QUALIDADE DE VÍDEO</h2>
+            <h2>âš™ï¸ QUALIDADE DE VÃDEO</h2>
             
             <div class="control-row">
-                <label>RESOLUÇÃO:</label>
+                <label>RESOLUÃ‡ÃƒO:</label>
                 <select id="resolutionSelect">
                     <option value="640x480">640x480 (SD)</option>
                     <option value="1280x720">1280x720 (HD)</option>
@@ -186,7 +217,7 @@
                     <option value="3840x2160">3840x2160 (4K)</option>
                 </select>
             </div>
-            <button id="updateResolutionBtn">✅ APLICAR RESOLUÇÃO</button>
+            <button id="updateResolutionBtn">âœ… APLICAR RESOLUÃ‡ÃƒO</button>
 
             <div class="control-row">
                 <label>Bitrate:</label>
@@ -203,24 +234,24 @@
                             <option value="50">50 Mbps</option>
                         </select>
             </div>
-            <button id="updateBitrateBtn">✅ APLICAR BITRATE</button>
+            <button id="updateBitrateBtn">âœ… APLICAR BITRATE</button>
 
             <div class="control-row">
                 <label>FPS:</label>
                 <select id="fpsSelect">
                     <option value="24">24 FPS (Cinema)</option>
-                    <option value="30" selected>30 FPS (Padr�o)</option>
+                    <option value="30" selected>30 FPS (Padrï¿½o)</option>
                     <option value="60">60 FPS (Suave)</option>
                 </select>
             </div>
-            <button id="updateFpsBtn">✅ APLICAR FPS</button>
+            <button id="updateFpsBtn">âœ… APLICAR FPS</button>
         </div>
 
-        <!-- LAT�NCIA -->
+        <!-- LATï¿½NCIA -->
         <div class="control-section">
-            <h2>? LAT�NCIA</h2>
+            <h2>? LATï¿½NCIA</h2>
             <div class="control-row">
-                <label>Buffer de Lat�ncia:</label>
+                <label>Buffer de Latï¿½ncia:</label>
                 <select id="latencySelect">
                     <option value="0">0ms (Ultra Baixa)</option>
                     <option value="50">50ms (Muito Baixa)</option>
@@ -229,12 +260,12 @@
                     <option value="500">500ms (Alta)</option>
                 </select>
             </div>
-            <button id="updateLatencyBtn">?? APLICAR LAT�NCIA</button>
+            <button id="updateLatencyBtn">?? APLICAR LATï¿½NCIA</button>
         </div>
 
-        <!-- CONTROLES DE CÂMERA -->
+        <!-- CONTROLES DE CÃ‚MERA -->
         <div class="control-section">
-            <h2>??? CONTROLES AVAN�ADOS</h2>
+            <h2>??? CONTROLES AVANï¿½ADOS</h2>
             
             <div class="control-row">
                 <label>?? ISO:</label>
@@ -245,7 +276,7 @@
             </div>
 
             <div class="control-row">
-                <label>?? Exposi��o:</label>
+                <label>?? Exposiï¿½ï¿½o:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
                     <span class="slider-value" id="exposureValue">0.0</span>
@@ -266,7 +297,7 @@
             alert('? ERRO: Adicione ?room=SEUID na URL\n\nExemplo: obs-controls.html?room=Culto');
         }
 
-        document.getElementById('roomName').textContent = roomId || 'N�o definida';
+        document.getElementById('roomName').textContent = roomId || 'Nï¿½o definida';
 
         const statusBadge = document.getElementById('statusBadge');
         const logContainer = document.getElementById('logContainer');
@@ -315,17 +346,17 @@
                 log('? CONTROLES PRONTOS!');
                 updateStatus('Conectado', 'connected');
                 
-                // Solicitar lista de CÂMERAs do mobile
+                // Solicitar lista de CÃ‚MERAs do mobile
                 setTimeout(() => {
                     socket.emit('request-camera-list', { roomId });
-                    log('?? Solicitando lista de CÂMERAs...');
+                    log('?? Solicitando lista de CÃ‚MERAs...');
                 }, 1000);
             });
 
-            // Receber lista de CÂMERAs
+            // Receber lista de CÃ‚MERAs
             socket.on('camera-list', (data) => {
                 if (data.cameras && data.cameras.length > 0) {
-                    log(`?? Recebidas ${data.cameras.length} CÂMERA(s) do celular`);
+                    log(`?? Recebidas ${data.cameras.length} CÃ‚MERA(s) do celular`);
                     
                     availableCameras = data.cameras;
                     cameraSelect.innerHTML = '';
@@ -347,23 +378,23 @@
                         }
                     });
                     
-                    cameraInfo.textContent = `? ${data.cameras.length} CÂMERA(s) dispon�vel(is)`;
+                    cameraInfo.textContent = `? ${data.cameras.length} CÃ‚MERA(s) disponï¿½vel(is)`;
                     cameraInfo.style.color = '#28a745';
                 }
             });
 
-            // TROCAR CÂMERA
+            // TROCAR CÃ‚MERA
             changeCameraBtn.onclick = () => {
                 const selectedCameraId = cameraSelect.value;
                 socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
                 log(`?? Trocando para: ${cameraSelect.options[cameraSelect.selectedIndex].text}`);
             };
 
-            // RESOLUÇÃO
+            // RESOLUÃ‡ÃƒO
             updateResolutionBtn.onclick = () => {
                 const value = resolutionSelect.value;
                 socket.emit('change-config', { roomId, type: 'resolution', value });
-                log(`?? RESOLUÇÃO: ${value}`);
+                log(`?? RESOLUÃ‡ÃƒO: ${value}`);
             };
 
             // BITRATE
@@ -380,11 +411,11 @@
                 log(`?? FPS: ${value}`);
             };
 
-            // LAT�NCIA
+            // LATï¿½NCIA
             updateLatencyBtn.onclick = () => {
                 const value = latencySelect.value;
                 socket.emit('change-config', { roomId, type: 'latency', value });
-                log(`? Lat�ncia: ${value}ms`);
+                log(`? Latï¿½ncia: ${value}ms`);
             };
 
             // ZOOM
@@ -415,7 +446,7 @@
                 }, 150);
             });
 
-            // EXPOSI��O
+            // EXPOSIï¿½ï¿½O
             let exposureDebounceTimer = null;
             exposureSlider.addEventListener('input', function() {
                 const value = exposureSlider.value;
@@ -425,7 +456,7 @@
                 
                 exposureDebounceTimer = setTimeout(() => {
                     socket.emit('camera-control', { roomId, control: 'exposure', value });
-                    log(`?? Exposi��o: ${value}`);
+                    log(`?? Exposiï¿½ï¿½o: ${value}`);
                 }, 150);
             });
 

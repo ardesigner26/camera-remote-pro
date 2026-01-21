@@ -157,12 +157,34 @@
             font-size: 11px;
             margin-top: 15px;
         }
-    </style>
+    
+        #stats-panel {
+            position: fixed;
+            bottom: 80px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            z-index: 1000;
+            max-width: 90%;
+            border: 1px solid #0f0;
+        }
+        #stats-panel .stat-line {
+            margin: 2px 0;
+        }
+        #stats-panel .stat-warning { color: #ff0; }
+        #stats-panel .stat-error { color: #f00; }
+        #stats-panel .stat-ok { color: #0f0; }
+        </style>
 </head>
 <body>
     <div class="container">
-        <h1>📱 CAMERA REMOTE PRO</h1>
-        <div class="subtitle">✅ Detecção Rápida + Zoom + Latência Zero</div>
+        <h1>ðŸ“± CAMERA REMOTE PRO</h1>
+        <div class="subtitle">âœ… DetecÃ§Ã£o RÃ¡pida + Zoom + LatÃªncia Zero</div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -170,11 +192,11 @@
                 <span class="status-value" id="status">Desconectado</span>
             </div>
             <div class="status-row">
-                <span>Câmera:</span>
+                <span>CÃ¢mera:</span>
                 <span class="status-value" id="currentCamera">-</span>
             </div>
             <div class="status-row">
-                <span>Resolução:</span>
+                <span>ResoluÃ§Ã£o:</span>
                 <span class="status-value" id="currentResolution">-</span>
             </div>
             <div class="status-row">
@@ -193,12 +215,12 @@
 
         <div class="video-container">
             <video id="video" autoplay playsinline muted></video>
-            <div class="zoom-indicator" id="zoomIndicator">🔍 1.0x</div>
+            <div class="zoom-indicator" id="zoomIndicator">ðŸ” 1.0x</div>
             <div class="zoom-info" id="zoomInfo">Zoom: 1.0x / Max: -</div>
         </div>
 
         <div class="config-section">
-            <div class="config-title">📹 SELECIONAR CÂMERA</div>
+            <div class="config-title">ðŸ“¹ SELECIONAR CÃ‚MERA</div>
             <select id="cameraSelect" disabled>
                 <option value="">Detectando...</option>
             </select>
@@ -206,7 +228,7 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">📐 RESOLUÇÃO</div>
+            <div class="config-title">ðŸ“ RESOLUÃ‡ÃƒO</div>
             <select id="resolutionSelect">
                 <option value="640x480">VGA 480p (640x480)</option>
                 <option value="1280x720">HD 720p (1280x720)</option>
@@ -217,7 +239,7 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">📊 BITRATE</div>
+            <div class="config-title">ðŸ“Š BITRATE</div>
             <select id="bitrateSelect">
                 <option value="5000000">5 Mbps</option>
                 <option value="10000000" selected>10 Mbps</option>
@@ -233,21 +255,21 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">🎬 FPS</div>
+            <div class="config-title">ðŸŽ¬ FPS</div>
             <select id="fpsSelect">
-                <option value="15">15 FPS (Ultra Baixa Latência)</option>
-                <option value="20">20 FPS (Baixa Latência)</option>
-                <option value="24">24 FPS (Média)</option>
+                <option value="15">15 FPS (Ultra Baixa LatÃªncia)</option>
+                <option value="20">20 FPS (Baixa LatÃªncia)</option>
+                <option value="24">24 FPS (MÃ©dia)</option>
                 <option value="30" selected>30 FPS (Mais ou Menos)</option>
-                <option value="60">60 FPS (Alta Latência)</option>
+                <option value="60">60 FPS (Alta LatÃªncia)</option>
             </select>
         </div>
 
         <label>ID da Sala:</label>
         <input type="text" id="roomId" placeholder="Digite o ID da sala">
         
-        <button id="startBtn">🚀 INICIAR</button>
-        <button id="restartBtn" style="display:none; background:#f44336;">🔄 APLICAR MUDANÇAS</button>
+        <button id="startBtn">ðŸš€ INICIAR</button>
+        <button id="restartBtn" style="display:none; background:#f44336;">ðŸ”„ APLICAR MUDANÃ‡AS</button>
 
         <div class="log" id="log"></div>
     </div>
@@ -302,9 +324,9 @@
             statusSpan.textContent = text;
         }
 
-        // 📹 DETECÇÃO RÁPIDA (SEM TESTES LENTOS)
+        // ðŸ“¹ DETECÃ‡ÃƒO RÃPIDA (SEM TESTES LENTOS)
         async function detectCameras() {
-            log('🔍 Detectando câmeras...');
+            log('ðŸ” Detectando cÃ¢meras...');
             
             try {
                 const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -313,7 +335,7 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 
-                log(`📹 ${videoDevices.length} câmera(s) encontrada(s)`);
+                log(`ðŸ“¹ ${videoDevices.length} cÃ¢mera(s) encontrada(s)`);
                 
                 availableCameras = videoDevices.map((device, index) => {
                     const label = device.label.toLowerCase();
@@ -323,18 +345,18 @@
                     if (label.includes('back') || label.includes('rear') || label.includes('traseira')) {
                         facingMode = 'environment';
                         estimatedRes = { width: 3840, height: 2160 };
-                        log(`  📷 ${device.label || 'Câmera ' + (index + 1)} - TRASEIRA (estimado 4K)`);
+                        log(`  ðŸ“· ${device.label || 'CÃ¢mera ' + (index + 1)} - TRASEIRA (estimado 4K)`);
                     } else if (label.includes('front') || label.includes('frontal')) {
                         facingMode = 'user';
                         estimatedRes = { width: 1920, height: 1080 };
-                        log(`  🤳 ${device.label || 'Câmera ' + (index + 1)} - FRONTAL (estimado 1080p)`);
+                        log(`  ðŸ¤³ ${device.label || 'CÃ¢mera ' + (index + 1)} - FRONTAL (estimado 1080p)`);
                     } else {
-                        log(`  📹 ${device.label || 'Câmera ' + (index + 1)} - Desconhecida`);
+                        log(`  ðŸ“¹ ${device.label || 'CÃ¢mera ' + (index + 1)} - Desconhecida`);
                     }
                     
                     return {
                         id: device.deviceId,
-                        label: device.label || `Câmera ${index + 1}`,
+                        label: device.label || `CÃ¢mera ${index + 1}`,
                         facingMode: facingMode,
                         maxResolution: estimatedRes
                     };
@@ -346,7 +368,7 @@
                     return currentPixels > bestPixels ? current : best;
                 }, availableCameras[0]);
                 
-                log(`🏆 Melhor: ${bestCamera.label}`);
+                log(`ðŸ† Melhor: ${bestCamera.label}`);
                 
                 cameraSelect.innerHTML = '';
                 availableCameras.forEach((cam) => {
@@ -354,9 +376,9 @@
                     option.value = cam.id;
                     
                     const isBest = cam.id === bestCamera.id;
-                    const facingIcon = cam.facingMode === 'environment' ? '📷' : 
-                                      cam.facingMode === 'user' ? '🤳' : '📹';
-                    const bestBadge = isBest ? ' 🏆' : '';
+                    const facingIcon = cam.facingMode === 'environment' ? 'ðŸ“·' : 
+                                      cam.facingMode === 'user' ? 'ðŸ¤³' : 'ðŸ“¹';
+                    const bestBadge = isBest ? ' ðŸ†' : '';
                     
                     option.textContent = `${facingIcon} ${cam.label}${bestBadge}`;
                     
@@ -375,10 +397,10 @@
                     sendCameraListToDesktop();
                 }
                 
-                log('✅ Detecção completa!');
+                log('âœ… DetecÃ§Ã£o completa!');
                 
             } catch (e) {
-                log('❌ Erro: ' + e.message);
+                log('âŒ Erro: ' + e.message);
                 cameraSelect.innerHTML = '<option>Erro ao detectar</option>';
             }
         }
@@ -398,7 +420,7 @@
                 selectedCameraId: selectedCameraId
             });
             
-            log('📤 Lista enviada');
+            log('ðŸ“¤ Lista enviada');
         }
 
         function updateCameraInfo() {
@@ -411,8 +433,8 @@
             
             cameraInfo.innerHTML = `
                 <strong>${cam.label}</strong><br>
-                📍 ${facingText}<br>
-                ${isBest ? '🏆 Melhor câmera!' : ''}
+                ðŸ“ ${facingText}<br>
+                ${isBest ? 'ðŸ† Melhor cÃ¢mera!' : ''}
             `;
             cameraInfo.style.display = 'block';
             cameraInfo.className = isBest ? 'camera-info best' : 'camera-info';
@@ -424,7 +446,7 @@
             
             if (localStream) {
                 restartBtn.style.background = '#FF9800';
-                restartBtn.textContent = '🔄 TROCAR CÂMERA';
+                restartBtn.textContent = 'ðŸ”„ TROCAR CÃ‚MERA';
             }
         });
 
@@ -432,7 +454,7 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-                console.log('📹 CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log('ðŸ“¹ CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
             if (!capabilities.zoom) return;
 
             const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
@@ -440,7 +462,7 @@
             currentZoomLevel = clampedZoom;
             const displayZoom = clampedZoom.toFixed(1);
             currentZoom.textContent = displayZoom + 'x';
-            zoomIndicator.textContent = `🔍 ${displayZoom}x`;
+            zoomIndicator.textContent = `ðŸ” ${displayZoom}x`;
             zoomInfo.textContent = `Zoom: ${displayZoom}x / Max: ${zoomMax.toFixed(1)}x`;
 
             if (zoomDebounceTimer) {
@@ -470,7 +492,7 @@
             const fps = parseInt(fpsSelect.value);
             const bitrate = parseInt(bitrateSelect.value);
 
-            log(`📹 ${width}x${height} @ ${fps}fps`);
+            log(`ðŸ“¹ ${width}x${height} @ ${fps}fps`);
             updateStatus('Iniciando...');
 
             try {
@@ -494,7 +516,7 @@
 
                 const settings = videoTrack.getSettings();
                 const capabilities = videoTrack.getCapabilities();
-                console.log('📹 CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log('ðŸ“¹ CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
 
                 const cam = availableCameras.find(c => c.id === settings.deviceId);
                 if (cam) {
@@ -525,9 +547,9 @@
                 currentFps.textContent = actualFps + ' fps';
                 currentBitrate.textContent = (bitrate/1000000).toFixed(1) + ' Mbps';
 
-                log(`✅ ${actualRes} @ ${actualFps}fps`);
+                log(`âœ… ${actualRes} @ ${actualFps}fps`);
 
-                updateStatus('Câmera OK');
+                updateStatus('CÃ¢mera OK');
                 
                 if (socket) {
                     socket.emit('config-update', { 
@@ -541,7 +563,7 @@
                 return true;
 
             } catch (e) {
-                log('❌ Erro: ' + e.message);
+                log('âŒ Erro: ' + e.message);
                 updateStatus('Erro');
                 return false;
             }
@@ -562,7 +584,7 @@
             };
 
             peerConnection.onconnectionstatechange = () => {
-                log('🔗 ' + peerConnection.connectionState);
+                log('ðŸ”— ' + peerConnection.connectionState);
                 if (peerConnection.connectionState === 'connected') {
                     updateStatus('Transmitindo');
                 }
@@ -590,7 +612,7 @@
 
         startBtn.onclick = async () => {
             roomId = roomIdInput.value.trim();
-            if (!roomId) return alert('⚠️ Digite um ID!');
+            if (!roomId) return alert('âš ï¸ Digite um ID!');
 
             startBtn.disabled = true;
             
@@ -605,7 +627,7 @@
             socket = io();
 
             socket.on('connect', () => {
-                log('✅ Socket conectado');
+                log('âœ… Socket conectado');
                 updateStatus('Socket OK');
                 socket.emit('join-room', roomId);
                 
@@ -615,7 +637,7 @@
             });
 
             socket.on('user-joined', async (userId) => {
-                log('👤 Desktop: ' + userId);
+                log('ðŸ‘¤ Desktop: ' + userId);
                 
                 setTimeout(async () => {
                     await setupPeerConnection();
@@ -650,7 +672,7 @@
 
             socket.on('change-camera', (data) => {
                 if (data.cameraId) {
-                    log(`🖥️ Troca: ${data.cameraId}`);
+                    log(`ðŸ–¥ï¸ Troca: ${data.cameraId}`);
                     selectedCameraId = data.cameraId;
                     cameraSelect.value = data.cameraId;
                     updateCameraInfo();
@@ -677,22 +699,22 @@
 
 
             socket.on('request-camera-list', () => {
-                console.log('🖥️ Desktop solicitou lista de câmeras');
+                console.log('ðŸ–¥ï¸ Desktop solicitou lista de cÃ¢meras');
                 sendCameraListToDesktop();
             });
 
             socket.on('disconnect', () => {
-                log('❌ Desconectado');
+                log('âŒ Desconectado');
                 updateStatus('Desconectado');
             });
 
             restartBtn.style.display = 'block';
-            startBtn.textContent = '✅ Ativa';
+            startBtn.textContent = 'âœ… Ativa';
             roomIdInput.disabled = true;
         };
 
         async function restartCamera() {
-            log('🔄 Reiniciando...');
+            log('ðŸ”„ Reiniciando...');
             
             const previousZoom = currentZoomLevel;
             
@@ -712,7 +734,7 @@
                     applyZoom(previousZoom);
                 }, 500);
                 
-                log('✅ Reiniciada!');
+                log('âœ… Reiniciada!');
             }
         }
 
@@ -721,7 +743,7 @@
         [resolutionSelect, bitrateSelect, fpsSelect].forEach(select => {
             select.addEventListener('change', () => {
                 restartBtn.style.background = '#FF9800';
-                restartBtn.textContent = '🔄 APLICAR';
+                restartBtn.textContent = 'ðŸ”„ APLICAR';
             });
         });
 
@@ -729,7 +751,7 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-                console.log('📹 CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log('ðŸ“¹ CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
 
             if (data.control === 'iso' && capabilities.iso) {
                 const val = parseInt(data.value);

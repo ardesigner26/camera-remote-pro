@@ -203,19 +203,50 @@
         @media (max-width: 1024px) {
             .main-grid { grid-template-columns: 1fr; }
         }
-    </style>
+    
+        #stats-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            z-index: 1000;
+            border: 2px solid #0f0;
+            min-width: 300px;
+        }
+        #stats-panel .stat-line {
+            margin: 3px 0;
+        }
+        #stats-panel .stat-warning { color: #ff0; }
+        #stats-panel .stat-error { color: #f00; }
+        #stats-panel .stat-ok { color: #0f0; }
+        </style>
 </head>
 <body>
+    <div id="stats-panel">
+        <div class="stat-line">📊 <strong>QUALIDADE REAL</strong></div>
+        <div class="stat-line" id="stat-resolution">📹 Resolução: --</div>
+        <div class="stat-line" id="stat-fps">🎬 FPS: --</div>
+        <div class="stat-line" id="stat-bitrate">📡 Bitrate: --</div>
+        <div class="stat-line" id="stat-codec">🔴 Codec: --</div>
+        <div class="stat-line" id="stat-packets">📦 Perda: --</div>
+        <div class="stat-line" id="stat-quality">⚠️ Status: --</div>
+    </div>
     <div class="header">
-        <h1>🖥️ CAMERA REMOTE PRO</h1>
-        <div class="subtitle">⚡ Controle Total de Câmeras + Latência Ultra Baixa</div>
+        <h1>ðŸ–¥ï¸ CAMERA REMOTE PRO</h1>
+        <div class="subtitle">âš¡ Controle Total de CÃ¢meras + LatÃªncia Ultra Baixa</div>
     </div>
 
     <div class="main-grid">
         <div class="video-section">
             <div class="video-wrapper">
                 <video id="remoteVideo" autoplay playsinline muted></video>
-                <div class="zoom-indicator-desktop" id="zoomIndicatorDesktop">🔍 1.0x</div>
+                <div class="zoom-indicator-desktop" id="zoomIndicatorDesktop">ðŸ” 1.0x</div>
             </div>
             <div class="console" id="console"></div>
         </div>
@@ -224,28 +255,28 @@
             <div class="connection-box">
                 <label style="font-weight:bold; margin-bottom:10px; display:block;">ID da Sala:</label>
                 <input type="text" id="roomIdInput" placeholder="Digite o ID da sala">
-                <button id="connectBtn">🚀 CONECTAR</button>
+                <button id="connectBtn">ðŸš€ CONECTAR</button>
                 <div class="status-badge" id="statusBadge">Desconectado</div>
             </div>
 
-            <div class="section-title">📹 SELECIONAR CÂMERA (Controle Remoto)</div>
+            <div class="section-title">ðŸ“¹ SELECIONAR CÃ‚MERA (Controle Remoto)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>📸 CÂMERA ATIVA</span>
+                    <span>ðŸ“¸ CÃ‚MERA ATIVA</span>
                 </div>
                 <select id="cameraSelectDesktop" disabled>
-                    <option value="">Aguardando conexão...</option>
+                    <option value="">Aguardando conexÃ£o...</option>
                 </select>
                 <div class="camera-info-desktop" id="cameraInfoDesktop" style="display:none;"></div>
-                <button class="update" id="changeCameraBtn" disabled>📹 TROCAR CÂMERA NO CELULAR</button>
+                <button class="update" id="changeCameraBtn" disabled>ðŸ“¹ TROCAR CÃ‚MERA NO CELULAR</button>
             </div>
 
-            <div class="section-title">📹 CONFIGURAÇÕES DE VÍDEO (Controle Remoto)</div>
+            <div class="section-title">ðŸ“¹ CONFIGURAÃ‡Ã•ES DE VÃDEO (Controle Remoto)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>📐 RESOLUÇÃO</span>
+                    <span>ðŸ“ RESOLUÃ‡ÃƒO</span>
                 </div>
                 <select id="resolutionSelect">
                     <option value="1280x720">HD 720p (1280x720)</option>
@@ -253,64 +284,64 @@
                     <option value="2560x1440">2K QHD (2560x1440)</option>
                     <option value="3840x2160">4K UHD (3840x2160)</option>
                 </select>
-                <button class="update" id="updateResolutionBtn" disabled>🔄 APLICAR RESOLUÇÃO NO CELULAR</button>
+                <button class="update" id="updateResolutionBtn" disabled>ðŸ”„ APLICAR RESOLUÃ‡ÃƒO NO CELULAR</button>
             </div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>📊 BITRATE</span>
+                    <span>ðŸ“Š BITRATE</span>
                 </div>
                 <select id="bitrateSelect">
-                    <option value="5000000">5 Mbps (Economia - Baixa Latência)</option>
+                    <option value="5000000">5 Mbps (Economia - Baixa LatÃªncia)</option>
                     <option value="10000000">10 Mbps (Balanceado)</option>
                     <option value="15000000" selected>15 Mbps (Alta Qualidade)</option>
                     <option value="20000000">20 Mbps (Muito Alta)</option>
                     <option value="30000000">30 Mbps (Ultra - 4K)</option>
-                    <option value="50000000">50 Mbps (Máxima - 4K 60fps)</option>
+                    <option value="50000000">50 Mbps (MÃ¡xima - 4K 60fps)</option>
                 </select>
-                <button class="update" id="updateBitrateBtn" disabled>🔄 APLICAR BITRATE NO CELULAR</button>
+                <button class="update" id="updateBitrateBtn" disabled>ðŸ”„ APLICAR BITRATE NO CELULAR</button>
             </div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>🎬 FPS</span>
+                    <span>ðŸŽ¬ FPS</span>
                 </div>
                 <select id="fpsSelect">
                     <option value="24">24 FPS (Cinema)</option>
-                    <option value="30" selected>30 FPS (Baixa Latência)</option>
-                    <option value="60">60 FPS (Suave - Alta Latência)</option>
+                    <option value="30" selected>30 FPS (Baixa LatÃªncia)</option>
+                    <option value="60">60 FPS (Suave - Alta LatÃªncia)</option>
                 </select>
-                <button class="update" id="updateFpsBtn" disabled>🔄 APLICAR FPS NO CELULAR</button>
+                <button class="update" id="updateFpsBtn" disabled>ðŸ”„ APLICAR FPS NO CELULAR</button>
             </div>
 
-            <div class="section-title">⏱️ CONTROLE DE LATÊNCIA (Buffer de Vídeo)</div>
+            <div class="section-title">â±ï¸ CONTROLE DE LATÃŠNCIA (Buffer de VÃ­deo)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>⚡ LATÊNCIA DO BUFFER</span>
+                    <span>âš¡ LATÃŠNCIA DO BUFFER</span>
                     <span class="control-value" id="latencyValue">0ms</span>
                 </div>
                 <input type="range" id="latencySlider" min="0" max="500" step="10" value="0" disabled>
                 <div class="latency-info">
-                    ⚡ 0ms = ZERO buffer (latência mínima)<br>
-                    🔄 Ajuste se vídeo travar/picar
+                    âš¡ 0ms = ZERO buffer (latÃªncia mÃ­nima)<br>
+                    ðŸ”„ Ajuste se vÃ­deo travar/picar
                 </div>
             </div>
 
-            <div class="section-title">🎥 CONTROLES DE CÂMERA</div>
+            <div class="section-title">ðŸŽ¥ CONTROLES DE CÃ‚MERA</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>🔍 ZOOM</span>
+                    <span>ðŸ” ZOOM</span>
                     <span class="control-value" id="zoomValue">1.0x</span>
                 </div>
                 <input type="range" id="zoomSlider" min="1" max="10" step="0.01" value="1" disabled>
-                <small style="color: #999; display: block; margin-top: 8px;">Aplica 200ms após parar de mover</small>
+                <small style="color: #999; display: block; margin-top: 8px;">Aplica 200ms apÃ³s parar de mover</small>
             </div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>📷 ISO</span>
+                    <span>ðŸ“· ISO</span>
                     <span class="control-value" id="isoValue">100</span>
                 </div>
                 <input type="range" id="isoSlider" min="100" max="3200" step="100" value="100" disabled>
@@ -318,7 +349,7 @@
 
             <div class="control-group">
                 <div class="control-label">
-                    <span>☀️ EXPOSIÇÃO</span>
+                    <span>â˜€ï¸ EXPOSIÃ‡ÃƒO</span>
                     <span class="control-value" id="exposureValue">0.0</span>
                 </div>
                 <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0" disabled>
@@ -378,7 +409,7 @@
 
         function applyUltraLowLatency(latencyMs) {
             if (!remoteVideo) {
-                log('⚠️ Não há elemento de vídeo para aplicar latência.');
+                log('âš ï¸ NÃ£o hÃ¡ elemento de vÃ­deo para aplicar latÃªncia.');
                 return;
             }
 
@@ -389,13 +420,13 @@
                 // Set playoutDelayHint on the video element
                 if (remoteVideo.playoutDelayHint !== undefined) {
                     remoteVideo.playoutDelayHint = latencySeconds;
-                    log(`⚡ playoutDelayHint no vídeo = ${latencyMs}ms`);
+                    log(`âš¡ playoutDelayHint no vÃ­deo = ${latencyMs}ms`);
                 }
 
                 // Disable preload if latency is 0 to reduce buffering
                 if (latencyMs === 0) {
                     remoteVideo.preload = 'none';
-                    log('⚡ Preload do vídeo desabilitado.');
+                    log('âš¡ Preload do vÃ­deo desabilitado.');
                 } else {
                     remoteVideo.preload = 'auto'; // Re-enable if not 0
                 }
@@ -408,25 +439,25 @@
                             try {
                                 if (receiver.playoutDelayHint !== undefined) {
                                     receiver.playoutDelayHint = latencySeconds;
-                                    log(`⚡ playoutDelayHint no receiver = ${latencyMs}ms`);
+                                    log(`âš¡ playoutDelayHint no receiver = ${latencyMs}ms`);
                                 }
                                 
                                 // jitterBufferTarget is typically for Chrome/Edge and expects milliseconds
                                 if (receiver.jitterBufferTarget !== undefined) {
                                     receiver.jitterBufferTarget = latencyMs;
-                                    log(`⚡ jitterBufferTarget no receiver = ${latencyMs}ms`);
+                                    log(`âš¡ jitterBufferTarget no receiver = ${latencyMs}ms`);
                                 }
                             } catch (e) {
-                                log(`⚠️ Erro ao configurar receiver para latência: ${e.message}`);
+                                log(`âš ï¸ Erro ao configurar receiver para latÃªncia: ${e.message}`);
                             }
                         }
                     });
                 }
 
-                log(`✅ Latência configurada para ${latencyMs}ms.`);
+                log(`âœ… LatÃªncia configurada para ${latencyMs}ms.`);
 
             } catch (e) {
-                log(`❌ Erro ao aplicar configurações de latência: ${e.message}`);
+                log(`âŒ Erro ao aplicar configuraÃ§Ãµes de latÃªncia: ${e.message}`);
             }
         }
 
@@ -442,9 +473,9 @@
             
             cameraInfoDesktop.innerHTML = `
                 <strong>${cam.label}</strong><br>
-                📍 Posição: ${facingText}<br>
-                📐 Resolução Máxima: ${cam.maxResolution.width}x${cam.maxResolution.height}<br>
-                ${cam.isBest ? '🏆 Esta é a câmera com MELHOR resolução!' : ''}
+                ðŸ“ PosiÃ§Ã£o: ${facingText}<br>
+                ðŸ“ ResoluÃ§Ã£o MÃ¡xima: ${cam.maxResolution.width}x${cam.maxResolution.height}<br>
+                ${cam.isBest ? 'ðŸ† Esta Ã© a cÃ¢mera com MELHOR resoluÃ§Ã£o!' : ''}
             `;
             cameraInfoDesktop.style.display = 'block';
             cameraInfoDesktop.className = cam.isBest ? 'camera-info-desktop best' : 'camera-info-desktop';
@@ -457,30 +488,30 @@
         connectBtn.onclick = () => {
             roomId = roomIdInput.value.trim();
             if (!roomId) {
-                alert('⚠️ Digite o ID da sala!');
+                alert('âš ï¸ Digite o ID da sala!');
                 return;
             }
 
             connectBtn.disabled = true;
-            connectBtn.textContent = '⏳ Conectando...';
+            connectBtn.textContent = 'â³ Conectando...';
             statusBadge.textContent = 'Conectando...';
 
             socket = io();
 
             socket.on('connect', () => {
-                log('✅ Socket.io conectado.');
+                log('âœ… Socket.io conectado.');
                 socket.emit('join-room', roomId);
-                log(`📡 Entrou na sala: ${roomId}`);
+                log(`ðŸ“¡ Entrou na sala: ${roomId}`);
                 statusBadge.textContent = 'Aguardando Mobile...';
             });
 
             socket.on('offer', async (data) => {
-                log('📥 OFFER WebRTC recebida.');
+                log('ðŸ“¥ OFFER WebRTC recebida.');
                 
                 peerConnection = new RTCPeerConnection(config);
 
                 peerConnection.ontrack = (event) => {
-                    log('📺 VÍDEO RECEBIDO!');
+                    log('ðŸ“º VÃDEO RECEBIDO!');
                     remoteVideo.srcObject = event.streams[0];
                     
                     // Apply latency settings after the video stream is available
@@ -490,7 +521,7 @@
                     
                     statusBadge.textContent = 'Transmitindo';
                     statusBadge.classList.add('connected');
-                    connectBtn.textContent = '✅ Conectado';
+                    connectBtn.textContent = 'âœ… Conectado';
                     
                     updateResolutionBtn.disabled = false;
                     updateBitrateBtn.disabled = false;
@@ -504,14 +535,14 @@
                 peerConnection.onicecandidate = (e) => {
                     if (e.candidate) {
                         socket.emit('ice-candidate', { roomId, candidate: e.candidate });
-                        log('📤 ICE Candidate enviado.');
+                        log('ðŸ“¤ ICE Candidate enviado.');
                     }
                 };
 
                 peerConnection.onconnectionstatechange = () => {
-                    log('🔗 Estado da conexão WebRTC: ' + peerConnection.connectionState);
+                    log('ðŸ”— Estado da conexÃ£o WebRTC: ' + peerConnection.connectionState);
                     if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
-                        log('❌ Conexão WebRTC perdida ou falhou.');
+                        log('âŒ ConexÃ£o WebRTC perdida ou falhou.');
                         // Handle reconnection or UI reset
                     }
                 };
@@ -520,19 +551,19 @@
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
                 socket.emit('answer', { roomId, answer });
-                log('📤 ANSWER WebRTC enviada.');
+                log('ðŸ“¤ ANSWER WebRTC enviada.');
             });
 
             socket.on('ice-candidate', async (data) => {
                 if (data.candidate && peerConnection) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                    log('📥 ICE Candidate adicionado.');
+                    log('ðŸ“¥ ICE Candidate adicionado.');
                 }
             });
 
             socket.on('camera-list', (data) => {
                 if (data.cameras && data.cameras.length > 0) {
-                    log(`📹 Recebidas ${data.cameras.length} câmera(s) do celular.`);
+                    log(`ðŸ“¹ Recebidas ${data.cameras.length} cÃ¢mera(s) do celular.`);
                     
                     availableCamerasDesktop = data.cameras;
                     
@@ -541,9 +572,9 @@
                         const option = document.createElement('option');
                         option.value = camera.id;
                         
-                        const facingIcon = camera.facingMode === 'environment' ? '📷' : 
-                                          camera.facingMode === 'user' ? '🤳' : '📹';
-                        const bestBadge = camera.isBest ? ' 🏆 MELHOR' : '';
+                        const facingIcon = camera.facingMode === 'environment' ? 'ðŸ“·' : 
+                                          camera.facingMode === 'user' ? 'ðŸ¤³' : 'ðŸ“¹';
+                        const bestBadge = camera.isBest ? ' ðŸ† MELHOR' : '';
                         
                         option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
                         
@@ -558,10 +589,10 @@
                     changeCameraBtn.disabled = false;
                     updateCameraInfoDesktop(); // Update local info display
                     
-                    log(`✅ Lista de câmeras atualizada no desktop.`);
+                    log(`âœ… Lista de cÃ¢meras atualizada no desktop.`);
                 } else {
-                    log('⚠️ Nenhuma câmera recebida do celular ou lista vazia.');
-                    cameraSelectDesktop.innerHTML = '<option value="">Nenhuma câmera disponível</option>';
+                    log('âš ï¸ Nenhuma cÃ¢mera recebida do celular ou lista vazia.');
+                    cameraSelectDesktop.innerHTML = '<option value="">Nenhuma cÃ¢mera disponÃ­vel</option>';
                     cameraSelectDesktop.disabled = true;
                     changeCameraBtn.disabled = true;
                     cameraInfoDesktop.style.display = 'none';
@@ -574,9 +605,9 @@
                     zoomValue.textContent = zoomVal.toFixed(1) + 'x';
                     zoomSlider.value = zoomVal; // Update slider position
                     
-                    zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
+                    zoomIndicatorDesktop.textContent = `ðŸ” ${zoomVal.toFixed(1)}x`;
                     zoomIndicatorDesktop.style.display = 'block';
-                    log(`🔍 Zoom atualizado para: ${zoomVal.toFixed(1)}x`);
+                    log(`ðŸ” Zoom atualizado para: ${zoomVal.toFixed(1)}x`);
                 }
             });
 
@@ -586,25 +617,25 @@
                     zoomSlider.max = data.zoomMax;
                     zoomSlider.step = 0.01; // Allow fine-grained control
                     
-                    log(`✅ Zoom range recebido: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
+                    log(`âœ… Zoom range recebido: ${data.zoomMin.toFixed(1)}x - ${data.zoomMax.toFixed(1)}x`);
                     
                     if (data.currentZoom) {
                         const zoomVal = parseFloat(data.currentZoom);
                         zoomSlider.value = zoomVal;
                         zoomValue.textContent = zoomVal.toFixed(1) + 'x';
-                        zoomIndicatorDesktop.textContent = `🔍 ${zoomVal.toFixed(1)}x`;
+                        zoomIndicatorDesktop.textContent = `ðŸ” ${zoomVal.toFixed(1)}x`;
                         zoomIndicatorDesktop.style.display = 'block';
-                        log(`🔍 Zoom atual: ${zoomVal.toFixed(1)}x`);
+                        log(`ðŸ” Zoom atual: ${zoomVal.toFixed(1)}x`);
                     }
                 }
             });
 
             socket.on('disconnect', () => {
-                log('❌ Desconectado do servidor.');
+                log('âŒ Desconectado do servidor.');
                 statusBadge.textContent = 'Desconectado';
                 statusBadge.classList.remove('connected');
                 connectBtn.disabled = false;
-                connectBtn.textContent = '🚀 CONECTAR';
+                connectBtn.textContent = 'ðŸš€ CONECTAR';
                 
                 updateResolutionBtn.disabled = true;
                 updateBitrateBtn.disabled = true;
@@ -619,46 +650,46 @@
                 zoomIndicatorDesktop.style.display = 'none';
                 remoteVideo.srcObject = null; // Clear video
                 peerConnection = null; // Reset peer connection
-                log('UI resetada após desconexão.');
+                log('UI resetada apÃ³s desconexÃ£o.');
             });
         };
 
         changeCameraBtn.onclick = () => {
             const selectedCameraId = cameraSelectDesktop.value;
             if (!selectedCameraId) {
-                alert('⚠️ Selecione uma câmera para trocar!');
+                alert('âš ï¸ Selecione uma cÃ¢mera para trocar!');
                 return;
             }
             
             const cam = availableCamerasDesktop.find(c => c.id === selectedCameraId);
             if (cam) {
-                log(`📹 Solicitando ao celular para trocar para: ${cam.label}`);
+                log(`ðŸ“¹ Solicitando ao celular para trocar para: ${cam.label}`);
                 socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
-                alert(`✅ Comando enviado! O celular vai trocar para: ${cam.label}`);
+                alert(`âœ… Comando enviado! O celular vai trocar para: ${cam.label}`);
             } else {
-                log('⚠️ Câmera selecionada não encontrada na lista.');
+                log('âš ï¸ CÃ¢mera selecionada nÃ£o encontrada na lista.');
             }
         };
 
         updateResolutionBtn.onclick = () => {
             const value = resolutionSelect.value;
             socket.emit('change-config', { roomId, type: 'resolution', value });
-            log(`📐 Enviando comando para alterar resolução para: ${value}`);
-            alert(`✅ Comando enviado! O celular vai reiniciar a câmera em ${value}`);
+            log(`ðŸ“ Enviando comando para alterar resoluÃ§Ã£o para: ${value}`);
+            alert(`âœ… Comando enviado! O celular vai reiniciar a cÃ¢mera em ${value}`);
         };
 
         updateBitrateBtn.onclick = () => {
             const value = bitrateSelect.value;
             socket.emit('change-config', { roomId, type: 'bitrate', value });
-            log(`📊 Enviando comando para alterar bitrate para: ${(value/1000000)} Mbps`);
-            alert(`✅ Comando enviado! O celular vai aplicar bitrate de ${(value/1000000)} Mbps`);
+            log(`ðŸ“Š Enviando comando para alterar bitrate para: ${(value/1000000)} Mbps`);
+            alert(`âœ… Comando enviado! O celular vai aplicar bitrate de ${(value/1000000)} Mbps`);
         };
 
         updateFpsBtn.onclick = () => {
             const value = fpsSelect.value;
             socket.emit('change-config', { roomId, type: 'fps', value });
-            log(`🎬 Enviando comando para alterar FPS para: ${value}`);
-            alert(`✅ Comando enviado! O celular vai aplicar ${value} FPS`);
+            log(`ðŸŽ¬ Enviando comando para alterar FPS para: ${value}`);
+            alert(`âœ… Comando enviado! O celular vai aplicar ${value} FPS`);
         };
 
         latencySlider.addEventListener('input', function() {
@@ -669,15 +700,15 @@
             
             // No need to send to mobile, as mobile is the sender and desktop is the receiver
             // The latency settings are applied on the receiving end (desktop/OBS)
-            log(`⏱️ Latência do buffer ajustada localmente para: ${latency}ms`);
+            log(`â±ï¸ LatÃªncia do buffer ajustada localmente para: ${latency}ms`);
         });
 
         function sendCommand(control, value) {
             if (socket && roomId) {
                 socket.emit('camera-control', { roomId, control, value });
-                log(`📤 Comando de controle enviado: ${control} = ${value}`);
+                log(`ðŸ“¤ Comando de controle enviado: ${control} = ${value}`);
             } else {
-                log(`⚠️ Não foi possível enviar comando ${control}: socket ou roomId não definidos.`);
+                log(`âš ï¸ NÃ£o foi possÃ­vel enviar comando ${control}: socket ou roomId nÃ£o definidos.`);
             }
         }
 
@@ -686,7 +717,7 @@
             const value = parseFloat(zoomSlider.value);
             zoomValue.textContent = value.toFixed(1) + 'x';
             
-            zoomIndicatorDesktop.textContent = `🔍 ${value.toFixed(1)}x`;
+            zoomIndicatorDesktop.textContent = `ðŸ” ${value.toFixed(1)}x`;
             zoomIndicatorDesktop.style.display = 'block';
             
             if (zoomDebounceTimer) {
@@ -695,7 +726,7 @@
             
             zoomDebounceTimer = setTimeout(() => {
                 sendCommand('zoom', value);
-                log(`🔍 Zoom enviado: ${value.toFixed(1)}x (após debounce)`);
+                log(`ðŸ” Zoom enviado: ${value.toFixed(1)}x (apÃ³s debounce)`);
             }, 150); // 150ms debounce for sending zoom commands
         });
 
@@ -703,14 +734,14 @@
             const value = isoSlider.value;
             isoValue.textContent = value;
             sendCommand('iso', value);
-            log(`📷 ISO enviado: ${value}`);
+            log(`ðŸ“· ISO enviado: ${value}`);
         });
 
         exposureSlider.addEventListener('input', function() {
             const value = exposureSlider.value;
             exposureValue.textContent = parseFloat(value).toFixed(1);
             sendCommand('exposure', value);
-            log(`☀️ Exposição enviada: ${value}`);
+            log(`â˜€ï¸ ExposiÃ§Ã£o enviada: ${value}`);
         });
     </script>
 </body>
