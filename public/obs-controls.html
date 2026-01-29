@@ -1,96 +1,116 @@
-setInterval(updateStatsInLog, 1000);
+
         // ============================================
-        // CAPTURAR E EXIBIR STATS DO WEBRTC
+
+
+        // ============================================
+        // SISTEMA ANTI-TELA-PRETA
         // ============================================
         
-        function updateStatsDisplay() {
-            if (!peerConnection || peerConnection.connectionState !== 'connected') {
-                // Limpar stats se não conectado
-                document.querySelectorAll('[data-stat]').forEach(el => {
-                    el.textContent = '--';
-                });
+        function setupAutoReconnect() {
+            if (!peerConnection) {
+                console.log('⚠️ peerConnection não existe ainda, tentando novamente...');
+                setTimeout(setupAutoReconnect, 1000);
                 return;
             }
             
-            peerConnection.getStats(null).then(stats => {
-                let resolution = '--';
-                let fps = '--';
-                let bitrate = '--';
-                let codec = '--';
-                let packetLoss = '--';
+            console.log('🔧 Configurando reconexão automática...');
+            
+            peerConnection.addEventListener('connectionstatechange', () => {
+                console.log('🔌 Estado da conexão:', peerConnection.connectionState);
                 
-                stats.forEach(report => {
-                    // Capturar stats de vídeo recebido
-                    if (report.type === 'inbound-rtp' && report.kind === 'video') {
-                        // Resolução
-                        if (report.frameWidth && report.frameHeight) {
-                            resolution = report.frameWidth + 'x' + report.frameHeight;
-                        }
-                        
-                        // FPS
-                        if (report.framesPerSecond) {
-                            fps = report.framesPerSecond.toFixed(1);
-                        }
-                        
-                        // Bitrate (calcular)
-                        if (report.bytesReceived !== undefined) {
-                            if (window.lastBytesReceived !== undefined && window.lastStatsTime !== undefined) {
-                                const bytesDiff = report.bytesReceived - window.lastBytesReceived;
-                                const timeDiff = (report.timestamp - window.lastStatsTime) / 1000;
-                                const bitrateKbps = Math.round((bytesDiff * 8) / timeDiff / 1000);
-                                bitrate = bitrateKbps + ' kbps';
-                            }
-                            window.lastBytesReceived = report.bytesReceived;
-                            window.lastStatsTime = report.timestamp;
-                        }
-                        
-                        // Packet Loss
-                        if (report.packetsLost !== undefined && report.packetsReceived !== undefined) {
-                            const totalPackets = report.packetsLost + report.packetsReceived;
-                            if (totalPackets > 0) {
-                                const lossPercent = (report.packetsLost / totalPackets) * 100;
-                                packetLoss = lossPercent.toFixed(2) + '%';
-                            } else {
-                                packetLoss = '0.00%';
-                            }
-                        }
-                        
-                        // Codec
-                        if (report.codecId) {
-                            stats.forEach(codecReport => {
-                                if (codecReport.id === report.codecId && codecReport.mimeType) {
-                                    codec = codecReport.mimeType;
-                                }
-                            });
-                        }
-                    }
-                });
-                
-                // Atualizar elementos da interface
-                const resEl = document.querySelector('[data-stat="resolution"]');
-                const fpsEl = document.querySelector('[data-stat="fps"]');
-                const bitrateEl = document.querySelector('[data-stat="bitrate"]');
-                const codecEl = document.querySelector('[data-stat="codec"]');
-                const lossEl = document.querySelector('[data-stat="loss"]');
-                const statusEl = document.querySelector('[data-stat="status"]');
-                
-                if (resEl) resEl.textContent = resolution;
-                if (fpsEl) fpsEl.textContent = fps;
-                if (bitrateEl) bitrateEl.textContent = bitrate;
-                if (codecEl) codecEl.textContent = codec;
-                if (lossEl) lossEl.textContent = packetLoss;
-                if (statusEl) statusEl.textContent = 'Conectado';
-                
-                console.log('📊 Stats:', { resolution, fps, bitrate, codec, packetLoss });
-            }).catch(err => {
-                console.error('❌ Erro ao obter stats:', err);
+                if (peerConnection.connectionState === 'failed' || 
+                    peerConnection.connectionState === 'disconnected') {
+                    
+                    console.warn('⚠️ Conexão perdida! Reconectando em 2 segundos...');
+                    
+                    setTimeout(() => {
+                        console.log('🔄 Forçando reload para reconectar...');
+                        location.reload();
+                    }, 2000);
+                }
             });
+            
+            peerConnection.addEventListener('iceconnectionstatechange', () => {
+                console.log('❄️ ICE estado:', peerConnection.iceConnectionState);
+                
+                if (peerConnection.iceConnectionState === 'failed' ||
+                    peerConnection.iceConnectionState === 'disconnected') {
+                    
+                    console.warn('⚠️ ICE connection falhou! Reconectando...');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                }
+            });
+            
+            console.log('✅ Auto-reconnect configurado!');
         }
         
-        // Atualizar stats a cada 1 segundo
-        setInterval(updateStatsDisplay, 1000);
+        let wasHidden = false;
         
-        console.log('✅ Sistema de stats configurado!');
-
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('👁️ Browser Source OCULTO (cena mudou)');
+                wasHidden = true;
+            } else {
+                console.log('👁️ Browser Source VISÍVEL novamente');
+                
+                if (wasHidden) {
+                    setTimeout(() => {
+                        if (peerConnection) {
+                            const state = peerConnection.connectionState;
+                            console.log('🔍 Verificando conexão após voltar:', state);
+                            
+                            if (state === 'failed' || state === 'disconnected' || state === 'closed') {
+                                console.warn('❌ Conexão morreu durante mudança de cena!');
+                                console.log('🔄 Recarregando página...');
+                                location.reload();
+                            }
+                        } else {
+                            console.warn('❌ peerConnection não existe!');
+                            location.reload();
+                        }
+                    }, 1000);
+                    
+                    wasHidden = false;
+                }
+            }
+        });
+        
+        setInterval(() => {
+            if (peerConnection && peerConnection.connectionState === 'connected') {
+                peerConnection.getStats().then(stats => {
+                    stats.forEach(report => {
+                        if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                            const bytesReceived = report.bytesReceived || 0;
+                            
+                            if (window.lastBytesReceived === undefined) {
+                                window.lastBytesReceived = bytesReceived;
+                                window.noDataCounter = 0;
+                            } else {
+                                if (bytesReceived === window.lastBytesReceived) {
+                                    window.noDataCounter++;
+                                    console.warn(⚠️ Sem dados novos há + (window.noDataCounter * 5) + 's');
+                                    
+                                    if (window.noDataCounter >= 3) {
+                                        console.error('❌ 15s sem dados! Reconectando...');
+                                        location.reload();
+                                    }
+                                } else {
+                                    window.noDataCounter = 0;
+                                    window.lastBytesReceived = bytesReceived;
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+        }, 5000);
+        
+        setTimeout(() => {
+            console.log('🚀 Iniciando sistema anti-tela-preta...');
+            setupAutoReconnect();
+        }, 3000);
     </script>
 </body>
