@@ -1,645 +1,96 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â OBS Controls Panel</title>
-    <style>
-
-/* OCULTAR PAINEL DE STATS VERDE */
-.stats-panel,
-.quality-panel,
-[class*="stats"],
-[class*="quality"] {
-    display: none !important;
-}
-
-/* ÁREA DE LOG - MOSTRAR STATS AQUI */
-.log-area,
-.console,
-.message-area {
-    display: block !important;
-    background: #000;
-    color: #0f0;
-    padding: 10px;
-    border: 2px solid #0f0;
-    font-family: monospace;
-    font-size: 14px;
-    min-height: 100px;
-}
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
-        }
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .status-bar {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .status-badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .status-connected {
-            background: #28a745;
-            color: white;
-        }
-        .status-waiting {
-            background: #ffc107;
-            color: #000;
-        }
-        .room-info {
-            font-weight: bold;
-            color: #667eea;
-        }
-        .control-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }
-        .control-section h2 {
-            color: #667eea;
-            font-size: 18px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .control-row {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        label { font-weight: 600; color: #333; }
-        select, input[type="range"] {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        select:focus { border-color: #667eea; outline: none; }
-        input[type="range"] { padding: 0; height: 40px; }
-        .slider-value {
-            display: inline-block;
-            min-width: 60px;
-            text-align: center;
-            font-weight: bold;
-            color: #667eea;
-            font-size: 16px;
-        }
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            margin-top: 10px;
-        }
-        button:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        button:active { transform: translateY(0); }
-        .log-container {
-            background: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            padding: 15px;
-            border-radius: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 12px;
-            margin-top: 20px;
-        }
-        .log-entry { margin-bottom: 5px; }
-        .camera-info {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-    
-        #stats-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            color: #0f0;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            z-index: 1000;
-            border: 2px solid #0f0;
-            min-width: 300px;
-        }
-        #stats-panel .stat-line {
-            margin: 3px 0;
-        }
-        #stats-panel .stat-warning { color: #ff0; }
-        #stats-panel .stat-error { color: #f00; }
-        #stats-panel .stat-ok { color: #0f0; }
-        </style>
-</head>
-<body>
-    <div id="stats-panel">
-        <div class="stat-line">Ã°Å¸â€œÅ  <strong>QUALIDADE REAL</strong></div>
-        <div class="stat-line" id="stat-resolution">Ã°Å¸â€œÂ¹ ResoluÃƒÂ§ÃƒÂ£o: --</div>
-        <div class="stat-line" id="stat-fps">Ã°Å¸Å½Â¬ FPS: --</div>
-        <div class="stat-line" id="stat-bitrate">Ã°Å¸â€œÂ¡ Bitrate: --</div>
-        <div class="stat-line" id="stat-codec">Ã°Å¸â€Â´ Codec: --</div>
-        <div class="stat-line" id="stat-packets">Ã°Å¸â€œÂ¦ Perda: --</div>
-        <div class="stat-line" id="stat-quality">Ã¢Å¡Â Ã¯Â¸Â Status: --</div>
-    </div>
-    <div class="container">
-        <h1>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬ÂºÃƒÂ¯Ã‚Â¸Ã‚Â OBS CONTROLS PANEL</h1>
-        <p class="subtitle">Controle remoto completo para CÃƒÆ’Ã¢â‚¬Å¡MERA no OBS</p>
-
-        <div class="status-bar">
-            <div class="room-info">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¡ Sala: <span id="roomName">-</span></div>
-            <div class="status-badge status-connected" id="statusBadge">Conectado</div>
-        </div>
-
-        <!-- SELEÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½O DE CÃƒÆ’Ã¢â‚¬Å¡MERA -->
-        <div class="control-section">
-            <h2>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ CÃƒÆ’Ã¢â‚¬Å¡MERA</h2>
-            <div class="control-row">
-                <label>CÃƒÆ’Ã¢â‚¬Å¡MERA Ativa:</label>
-                <select id="cameraSelect">
-                    <option>Aguardando lista do mobile...</option>
-                </select>
-            </div>
-            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver CÃƒÆ’Ã¢â‚¬Å¡MERAs disponÃƒÂ¯Ã‚Â¿Ã‚Â½veis</div>
-            <button id="changeCameraBtn">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ TROCAR CÃƒÆ’Ã¢â‚¬Å¡MERA</button>
-        </div>
-
-        <!-- ZOOM -->
-        <div class="control-section">
-            <h2>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â ZOOM</h2>
-            <div class="control-row">
-                <label>Zoom Digital:</label>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1">
-                    <span class="slider-value" id="zoomValue">1.0x</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- QUALIDADE DE VÃƒÆ’Ã‚ÂDEO -->
-        <div class="control-section">
-            <h2>ÃƒÂ¢Ã…Â¡Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â QUALIDADE DE VÃƒÆ’Ã‚ÂDEO</h2>
-            
-            <div class="control-row">
-                <label>RESOLUÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O:</label>
-                <select id="resolutionSelect">
-                    <option value="640x480">640x480 (SD)</option>
-                    <option value="1280x720">1280x720 (HD)</option>
-                    <option value="1920x1080" selected>1920x1080 (Full HD)</option>`n                            <option value="2560x1440">2560x1440 (2K)</option>
-                    <option value="3840x2160">3840x2160 (4K)</option>
-                </select>
-            </div>
-            <button id="updateResolutionBtn">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ APLICAR RESOLUÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O</button>
-
-            <div class="control-row">
-                <label>Bitrate:</label>
-                <select id="bitrateSelect">
-                            <option value="5">5 Mbps</option>
-                            <option value="10" selected>10 Mbps</option>
-                            <option value="15">15 Mbps</option>
-                            <option value="20">20 Mbps</option>
-                            <option value="25">25 Mbps</option>
-                            <option value="30">30 Mbps</option>
-                            <option value="35">35 Mbps</option>
-                            <option value="40">40 Mbps</option>
-                            <option value="45">45 Mbps</option>
-                            <option value="50">50 Mbps</option>
-                        </select>
-            </div>
-            <button id="updateBitrateBtn">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ APLICAR BITRATE</button>
-
-            <div class="control-row">
-                <label>FPS:</label>
-                <select id="fpsSelect">
-                    <option value="24">24 FPS (Cinema)</option>
-                    <option value="30" selected>30 FPS (PadrÃƒÂ¯Ã‚Â¿Ã‚Â½o)</option>
-                    <option value="60">60 FPS (Suave)</option>
-                </select>
-            </div>
-            <button id="updateFpsBtn">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ APLICAR FPS</button>
-        </div>
-
-        <!-- LATÃƒÂ¯Ã‚Â¿Ã‚Â½NCIA -->
-        <div class="control-section">
-            <h2>? LATÃƒÂ¯Ã‚Â¿Ã‚Â½NCIA</h2>
-            <div class="control-row">
-                <label>Buffer de LatÃƒÂ¯Ã‚Â¿Ã‚Â½ncia:</label>
-                <select id="latencySelect">
-                    <option value="0">0ms (Ultra Baixa)</option>
-                    <option value="50">50ms (Muito Baixa)</option>
-                    <option value="100" selected>100ms (Baixa)</option>
-                    <option value="200">200ms (Normal)</option>
-                    <option value="500">500ms (Alta)</option>
-                </select>
-            </div>
-            <button id="updateLatencyBtn">?? APLICAR LATÃƒÂ¯Ã‚Â¿Ã‚Â½NCIA</button>
-        </div>
-
-        <!-- CONTROLES DE CÃƒÆ’Ã¢â‚¬Å¡MERA -->
-        <div class="control-section">
-            <h2>??? CONTROLES AVANÃƒÂ¯Ã‚Â¿Ã‚Â½ADOS</h2>
-            
-            <div class="control-row">
-                <label>?? ISO:</label>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="range" id="isoSlider" min="100" max="3200" step="100" value="400">
-                    <span class="slider-value" id="isoValue">400</span>
-                </div>
-            </div>
-
-            <div class="control-row">
-                <label>?? ExposiÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o:</label>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
-                    <span class="slider-value" id="exposureValue">0.0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- LOG -->
-        <div class="log-container" id="logContainer"></div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomId = urlParams.get('room');
-
-        if (!roomId) {
-            alert('? ERRO: Adicione ?room=SEUID na URL\n\nExemplo: obs-controls.html?room=Culto');
-        }
-
-        document.getElementById('roomName').textContent = roomId || 'NÃƒÂ¯Ã‚Â¿Ã‚Â½o definida';
-
-        const statusBadge = document.getElementById('statusBadge');
-        const logContainer = document.getElementById('logContainer');
-        const cameraSelect = document.getElementById('cameraSelect');
-        const cameraInfo = document.getElementById('cameraInfo');
-        const changeCameraBtn = document.getElementById('changeCameraBtn');
-        const zoomSlider = document.getElementById('zoomSlider');
-        const zoomValue = document.getElementById('zoomValue');
-        const resolutionSelect = document.getElementById('resolutionSelect');
-        const updateResolutionBtn = document.getElementById('updateResolutionBtn');
-        const bitrateSelect = document.getElementById('bitrateSelect');
-        const updateBitrateBtn = document.getElementById('updateBitrateBtn');
-        const fpsSelect = document.getElementById('fpsSelect');
-        const updateFpsBtn = document.getElementById('updateFpsBtn');
-        const latencySelect = document.getElementById('latencySelect');
-        const updateLatencyBtn = document.getElementById('updateLatencyBtn');
-        const isoSlider = document.getElementById('isoSlider');
-        const isoValue = document.getElementById('isoValue');
-        const exposureSlider = document.getElementById('exposureSlider');
-        const exposureValue = document.getElementById('exposureValue');
-
-        let socket;
-        let availableCameras = [];
-
-        function log(message) {
-            const time = new Date().toLocaleTimeString();
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.textContent = `[${time}] ${message}`;
-            logContainer.appendChild(entry);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
-
-        function updateStatus(text, type = 'connected') {
-            statusBadge.textContent = text;
-            statusBadge.className = 'status-badge status-' + type;
-        }
-
-        if (roomId) {
-            socket = io();
-
-            socket.on('connect', () => {
-                log('? Socket.io conectado');
-                socket.emit('join-room', roomId);
-                log(`?? Entrou na sala: ${roomId}`);
-                log('? CONTROLES PRONTOS!');
-                updateStatus('Conectado', 'connected');
-                
-                // Solicitar lista de CÃƒÆ’Ã¢â‚¬Å¡MERAs do mobile
-                setTimeout(() => {
-                    socket.emit('request-camera-list', { roomId });
-                    log('?? Solicitando lista de CÃƒÆ’Ã¢â‚¬Å¡MERAs...');
-                }, 1000);
-            });
-
-            // Receber lista de CÃƒÆ’Ã¢â‚¬Å¡MERAs
-            socket.on('camera-list', (data) => {
-                if (data.cameras && data.cameras.length > 0) {
-                    log(`?? Recebidas ${data.cameras.length} CÃƒÆ’Ã¢â‚¬Å¡MERA(s) do celular`);
-                    
-                    availableCameras = data.cameras;
-                    cameraSelect.innerHTML = '';
-                    
-                    data.cameras.forEach((camera) => {
-                        const option = document.createElement('option');
-                        option.value = camera.id;
-                        
-                        const facingIcon = camera.facingMode === 'environment' ? '??' :
-                                          camera.facingMode === 'user' ? '??' : '??';
-                        const bestBadge = camera.isBest ? ' ??' : '';
-                        
-                        option.textContent = `${facingIcon} ${camera.label} (${camera.maxResolution.width}x${camera.maxResolution.height})${bestBadge}`;
-                        
-                        cameraSelect.appendChild(option);
-                        
-                        if (camera.id === data.selectedCameraId) {
-                            cameraSelect.value = camera.id;
-                        }
-                    });
-                    
-                    cameraInfo.textContent = `? ${data.cameras.length} CÃƒÆ’Ã¢â‚¬Å¡MERA(s) disponÃƒÂ¯Ã‚Â¿Ã‚Â½vel(is)`;
-                    cameraInfo.style.color = '#28a745';
-                }
-            });
-
-            // TROCAR CÃƒÆ’Ã¢â‚¬Å¡MERA
-            changeCameraBtn.onclick = () => {
-                const selectedCameraId = cameraSelect.value;
-                socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
-                log(`?? Trocando para: ${cameraSelect.options[cameraSelect.selectedIndex].text}`);
-            };
-
-            // RESOLUÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O
-            updateResolutionBtn.onclick = () => {
-                const value = resolutionSelect.value;
-                socket.emit('change-config', { roomId, type: 'resolution', value });
-                log(`?? RESOLUÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O: ${value}`);
-            };
-
-            // BITRATE
-            updateBitrateBtn.onclick = () => {
-                const value = bitrateSelect.value;
-                socket.emit('change-config', { roomId, type: 'bitrate', value });
-                log(`?? Bitrate: ${value} Mbps`);
-            };
-
-            // FPS
-            updateFpsBtn.onclick = () => {
-                const value = fpsSelect.value;
-                socket.emit('change-config', { roomId, type: 'fps', value });
-                log(`?? FPS: ${value}`);
-            };
-
-            // LATÃƒÂ¯Ã‚Â¿Ã‚Â½NCIA
-            updateLatencyBtn.onclick = () => {
-                const value = latencySelect.value;
-                socket.emit('change-config', { roomId, type: 'latency', value });
-                log(`? LatÃƒÂ¯Ã‚Â¿Ã‚Â½ncia: ${value}ms`);
-            };
-
-            // ZOOM
-            let zoomDebounceTimer = null;
-            zoomSlider.addEventListener('input', function() {
-                const value = parseFloat(zoomSlider.value);
-                zoomValue.textContent = value.toFixed(1) + 'x';
-
-                if (zoomDebounceTimer) clearTimeout(zoomDebounceTimer);
-
-                zoomDebounceTimer = setTimeout(() => {
-                    socket.emit('camera-control', { roomId, control: 'zoom', value });
-                    log(`?? Zoom: ${value.toFixed(1)}x`);
-                }, 150);
-            });
-
-            // ISO
-            let isoDebounceTimer = null;
-            isoSlider.addEventListener('input', function() {
-                const value = isoSlider.value;
-                isoValue.textContent = value;
-                
-                if (isoDebounceTimer) clearTimeout(isoDebounceTimer);
-                
-                isoDebounceTimer = setTimeout(() => {
-                    socket.emit('camera-control', { roomId, control: 'iso', value });
-                    log(`?? ISO: ${value}`);
-                }, 150);
-            });
-
-            // EXPOSIÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½O
-            let exposureDebounceTimer = null;
-            exposureSlider.addEventListener('input', function() {
-                const value = exposureSlider.value;
-                exposureValue.textContent = parseFloat(value).toFixed(1);
-                
-                if (exposureDebounceTimer) clearTimeout(exposureDebounceTimer);
-                
-                exposureDebounceTimer = setTimeout(() => {
-                    socket.emit('camera-control', { roomId, control: 'exposure', value });
-                    log(`?? ExposiÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o: ${value}`);
-                }, 150);
-            });
-
-            socket.on('disconnect', () => {
-                log('? Desconectado');
-                updateStatus('Desconectado', 'waiting');
-            });
-        }
-    
-        // ========== SISTEMA DE ESTATÃSTICAS REAIS ==========
-        let statsInterval = null;
-
-        async function updateRealStats() {
-            if (!peerConnection) {
-                console.log('âš ï¸ peerConnection nÃ£o existe ainda');
+setInterval(updateStatsInLog, 1000);
+        // ============================================
+        // CAPTURAR E EXIBIR STATS DO WEBRTC
+        // ============================================
+        
+        function updateStatsDisplay() {
+            if (!peerConnection || peerConnection.connectionState !== 'connected') {
+                // Limpar stats se não conectado
+                document.querySelectorAll('[data-stat]').forEach(el => {
+                    el.textContent = '--';
+                });
                 return;
             }
-
-            try {
-                const stats = await peerConnection.getStats();
-                let videoStats = null;
-                let rtpStats = null;
-
+            
+            peerConnection.getStats(null).then(stats => {
+                let resolution = '--';
+                let fps = '--';
+                let bitrate = '--';
+                let codec = '--';
+                let packetLoss = '--';
+                
                 stats.forEach(report => {
-                    // Para MOBILE (outbound)
-                    if (report.type === 'outbound-rtp' && report.mediaType === 'video') {
-                        rtpStats = report;
-                    }
-                    // Para OBS/DESKTOP (inbound)
-                    if (report.type === 'inbound-rtp' && report.mediaType === 'video') {
-                        rtpStats = report;
-                    }
-                    if (report.type === 'media-source' && report.kind === 'video') {
-                        videoStats = report;
-                    }
-                    if (report.type === 'track' && report.kind === 'video') {
-                        videoStats = report;
-                    }
-                });
-
-                if (rtpStats) {
-                    const width = rtpStats.frameWidth || 0;
-                    const height = rtpStats.frameHeight || 0;
-                    const fps = rtpStats.framesPerSecond || (videoStats ? videoStats.framesPerSecond : 0) || 0;
-
-                    // Calcular bitrate
-                    const bytes = rtpStats.bytesSent || rtpStats.bytesReceived || 0;
-                    const timestamp = rtpStats.timestamp || Date.now();
-                    
-                    if (window.lastBytes && window.lastTimestamp) {
-                        const bitrate = Math.round(8 * (bytes - window.lastBytes) / (timestamp - window.lastTimestamp));
-                        const statBitrate = document.getElementById('stat-bitrate');
-                        if (statBitrate) {
-                            statBitrate.innerHTML = `ðŸ“¡ Bitrate: <span class="stat-ok">${bitrate} kbps</span>`;
+                    // Capturar stats de vídeo recebido
+                    if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                        // Resolução
+                        if (report.frameWidth && report.frameHeight) {
+                            resolution = report.frameWidth + 'x' + report.frameHeight;
                         }
-                    }
-                    window.lastBytes = bytes;
-                    window.lastTimestamp = timestamp;
-
-                    // Codec
-                    stats.forEach(report => {
-                        if (report.type === 'codec' && report.mimeType && report.mimeType.includes('video')) {
-                            const statCodec = document.getElementById('stat-codec');
-                            if (statCodec) {
-                                statCodec.innerHTML = `ðŸ”´ Codec: <span class="stat-ok">${report.mimeType}</span>`;
+                        
+                        // FPS
+                        if (report.framesPerSecond) {
+                            fps = report.framesPerSecond.toFixed(1);
+                        }
+                        
+                        // Bitrate (calcular)
+                        if (report.bytesReceived !== undefined) {
+                            if (window.lastBytesReceived !== undefined && window.lastStatsTime !== undefined) {
+                                const bytesDiff = report.bytesReceived - window.lastBytesReceived;
+                                const timeDiff = (report.timestamp - window.lastStatsTime) / 1000;
+                                const bitrateKbps = Math.round((bytesDiff * 8) / timeDiff / 1000);
+                                bitrate = bitrateKbps + ' kbps';
+                            }
+                            window.lastBytesReceived = report.bytesReceived;
+                            window.lastStatsTime = report.timestamp;
+                        }
+                        
+                        // Packet Loss
+                        if (report.packetsLost !== undefined && report.packetsReceived !== undefined) {
+                            const totalPackets = report.packetsLost + report.packetsReceived;
+                            if (totalPackets > 0) {
+                                const lossPercent = (report.packetsLost / totalPackets) * 100;
+                                packetLoss = lossPercent.toFixed(2) + '%';
+                            } else {
+                                packetLoss = '0.00%';
                             }
                         }
-                    });
-
-                    // ResoluÃ§Ã£o
-                    const statResolution = document.getElementById('stat-resolution');
-                    if (statResolution) {
-                        statResolution.innerHTML = `ðŸ“¹ Res: <span class="stat-ok">${width}x${height}</span>`;
-                    }
-                    
-                    // FPS
-                    const fpsClass = fps >= 25 ? 'stat-ok' : fps >= 15 ? 'stat-warning' : 'stat-error';
-                    const statFps = document.getElementById('stat-fps');
-                    if (statFps) {
-                        statFps.innerHTML = `ðŸŽ¬ FPS: <span class="${fpsClass}">${fps.toFixed(1)}</span>`;
-                    }
-
-                    // Pacotes perdidos
-                    const packetsLost = rtpStats.packetsLost || 0;
-                    const packetsTotal = (rtpStats.packetsSent || rtpStats.packetsReceived || 0) + packetsLost;
-                    const lossPercent = packetsTotal > 0 ? ((packetsLost / packetsTotal) * 100).toFixed(2) : 0;
-                    const lossClass = lossPercent < 1 ? 'stat-ok' : lossPercent < 5 ? 'stat-warning' : 'stat-error';
-                    const statPackets = document.getElementById('stat-packets');
-                    if (statPackets) {
-                        statPackets.innerHTML = `ðŸ“¦ Perda: <span class="${lossClass}">${lossPercent}%</span>`;
-                    }
-
-                    // Qualidade geral
-                    const qualityIssues = [];
-                    if (fps < 25) qualityIssues.push('FPS baixo');
-                    if (lossPercent > 5) qualityIssues.push('Perda alta');
-                    if (width < 1920) qualityIssues.push('Res. red.');
-                    
-                    const statQuality = document.getElementById('stat-quality');
-                    if (statQuality) {
-                        if (qualityIssues.length === 0) {
-                            statQuality.innerHTML = `âš ï¸ Status: <span class="stat-ok">âœ… OK</span>`;
-                        } else {
-                            statQuality.innerHTML = `âš ï¸ Status: <span class="stat-warning">${qualityIssues.join(', ')}</span>`;
+                        
+                        // Codec
+                        if (report.codecId) {
+                            stats.forEach(codecReport => {
+                                if (codecReport.id === report.codecId && codecReport.mimeType) {
+                                    codec = codecReport.mimeType;
+                                }
+                            });
                         }
                     }
-
-                    console.log('ðŸ“Š Stats atualizados:', {width, height, fps, lossPercent: lossPercent + '%'});
-                } else {
-                    console.log('âš ï¸ Nenhum stat RTP encontrado ainda');
-                }
-            } catch (e) {
-                console.error('âŒ Erro ao coletar stats:', e);
-            }
-        }
-
-        // Iniciar stats quando conexÃ£o estabelecida
-        function startStatsMonitoring() {
-            console.log('ðŸš€ Iniciando monitoramento de stats...');
-            if (statsInterval) clearInterval(statsInterval);
-            statsInterval = setInterval(updateRealStats, 1000);
-        }
-
-        // Hook no WebRTC para iniciar stats
-        const originalCreatePeerConnection = window.RTCPeerConnection;
-        window.RTCPeerConnection = function(...args) {
-            const pc = new originalCreatePeerConnection(...args);
-            pc.addEventListener('connectionstatechange', () => {
-                console.log('ðŸ”„ Connection state:', pc.connectionState);
-                if (pc.connectionState === 'connected') {
-                    setTimeout(startStatsMonitoring, 1000);
-                }
+                });
+                
+                // Atualizar elementos da interface
+                const resEl = document.querySelector('[data-stat="resolution"]');
+                const fpsEl = document.querySelector('[data-stat="fps"]');
+                const bitrateEl = document.querySelector('[data-stat="bitrate"]');
+                const codecEl = document.querySelector('[data-stat="codec"]');
+                const lossEl = document.querySelector('[data-stat="loss"]');
+                const statusEl = document.querySelector('[data-stat="status"]');
+                
+                if (resEl) resEl.textContent = resolution;
+                if (fpsEl) fpsEl.textContent = fps;
+                if (bitrateEl) bitrateEl.textContent = bitrate;
+                if (codecEl) codecEl.textContent = codec;
+                if (lossEl) lossEl.textContent = packetLoss;
+                if (statusEl) statusEl.textContent = 'Conectado';
+                
+                console.log('📊 Stats:', { resolution, fps, bitrate, codec, packetLoss });
+            }).catch(err => {
+                console.error('❌ Erro ao obter stats:', err);
             });
-            return pc;
-        };
-        console.log('âœ… Sistema de stats instalado!');
-        // ========== FIM SISTEMA DE ESTATÃSTICAS ==========
-</script>
-<script>
-// MOVER STATS PARA ÁREA DE LOG
-function updateStatsInLog() {
-    const logArea = document.querySelector('.log-area, .console, .message-area');
-    if (!logArea) return;
-    
-    // Pegar stats atuais
-    const statsElements = document.querySelectorAll('[data-stat]');
-    let statsText = '📊 ESTATÍSTICAS:\n';
-    
-    statsElements.forEach(el => {
-        const label = el.getAttribute('data-stat');
-        const value = el.textContent || '--';
-        statsText += ${label}: \n;
-    });
-    
-    // Atualizar área de log com stats
-    if (window.peerConnection && window.peerConnection.connectionState === 'connected') {
-        logArea.innerHTML = <pre style="color: #0f0; margin: 0;"></pre>;
-    }
-}
+        }
+        
+        // Atualizar stats a cada 1 segundo
+        setInterval(updateStatsDisplay, 1000);
+        
+        console.log('✅ Sistema de stats configurado!');
 
-// Atualizar stats a cada 1 segundo
-setInterval(updateStatsInLog, 1000);</script>
+    </script>
 </body>
-</html>
