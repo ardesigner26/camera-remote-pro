@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -183,8 +183,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± CAMERA REMOTE PRO</h1>
-        <div class="subtitle">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ DetecÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o RÃƒÆ’Ã‚Â¡pida + Zoom + LatÃƒÆ’Ã‚Âªncia Zero</div>
+        <h1> CAMERA REMOTE PRO</h1>
+        <div class="subtitle"> Deteco Rpida + Zoom + Latncia Zero</div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -192,11 +192,11 @@
                 <span class="status-value" id="status">Desconectado</span>
             </div>
             <div class="status-row">
-                <span>CÃƒÆ’Ã‚Â¢mera:</span>
+                <span>Cmera:</span>
                 <span class="status-value" id="currentCamera">-</span>
             </div>
             <div class="status-row">
-                <span>ResoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o:</span>
+                <span>Resoluo:</span>
                 <span class="status-value" id="currentResolution">-</span>
             </div>
             <div class="status-row">
@@ -215,12 +215,12 @@
 
         <div class="video-container">
             <video id="video" autoplay playsinline muted></video>
-            <div class="zoom-indicator" id="zoomIndicator">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â 1.0x</div>
+            <div class="zoom-indicator" id="zoomIndicator"> 1.0x</div>
             <div class="zoom-info" id="zoomInfo">Zoom: 1.0x / Max: -</div>
         </div>
 
         <div class="config-section">
-            <div class="config-title">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ SELECIONAR CÃƒÆ’Ã¢â‚¬Å¡MERA</div>
+            <div class="config-title"> SELECIONAR CMERA</div>
             <select id="cameraSelect" disabled>
                 <option value="">Detectando...</option>
             </select>
@@ -228,7 +228,7 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â RESOLUÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O</div>
+            <div class="config-title"> RESOLUO</div>
             <select id="resolutionSelect">
                 <option value="640x480">VGA 480p (640x480)</option>
                 <option value="1280x720">HD 720p (1280x720)</option>
@@ -239,7 +239,7 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  BITRATE</div>
+            <div class="config-title"> BITRATE</div>
             <select id="bitrateSelect">
                 <option value="5000000">5 Mbps</option>
                 <option value="10000000" selected>10 Mbps</option>
@@ -255,21 +255,21 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¬ FPS</div>
+            <div class="config-title"> FPS</div>
             <select id="fpsSelect">
-                <option value="15">15 FPS (Ultra Baixa LatÃƒÆ’Ã‚Âªncia)</option>
-                <option value="20">20 FPS (Baixa LatÃƒÆ’Ã‚Âªncia)</option>
-                <option value="24">24 FPS (MÃƒÆ’Ã‚Â©dia)</option>
+                <option value="15">15 FPS (Ultra Baixa Latncia)</option>
+                <option value="20">20 FPS (Baixa Latncia)</option>
+                <option value="24">24 FPS (Mdia)</option>
                 <option value="30" selected>30 FPS (Mais ou Menos)</option>
-                <option value="60">60 FPS (Alta LatÃƒÆ’Ã‚Âªncia)</option>
+                <option value="60">60 FPS (Alta Latncia)</option>
             </select>
         </div>
 
         <label>ID da Sala:</label>
         <input type="text" id="roomId" placeholder="Digite o ID da sala">
         
-        <button id="startBtn">ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â€šÂ¬ INICIAR</button>
-        <button id="restartBtn" style="display:none; background:#f44336;">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ APLICAR MUDANÃƒÆ’Ã¢â‚¬Â¡AS</button>
+        <button id="startBtn"> INICIAR</button>
+        <button id="restartBtn" style="display:none; background:#f44336;"> APLICAR MUDANAS</button>
 
         <div class="log" id="log"></div>
     </div>
@@ -324,9 +324,9 @@
             statusSpan.textContent = text;
         }
 
-        // ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ DETECÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O RÃƒÆ’Ã‚ÂPIDA (SEM TESTES LENTOS)
+        //  DETECO RPIDA (SEM TESTES LENTOS)
         async function detectCameras() {
-            log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Detectando cÃƒÆ’Ã‚Â¢meras...');
+            log(' Detectando cmeras...');
             
             try {
                 const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -335,7 +335,7 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 
-                log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ ${videoDevices.length} cÃƒÆ’Ã‚Â¢mera(s) encontrada(s)`);
+                log(` ${videoDevices.length} cmera(s) encontrada(s)`);
                 
                 availableCameras = videoDevices.map((device, index) => {
                     const label = device.label.toLowerCase();
@@ -345,18 +345,18 @@
                     if (label.includes('back') || label.includes('rear') || label.includes('traseira')) {
                         facingMode = 'environment';
                         estimatedRes = { width: 3840, height: 2160 };
-                        log(`  ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â· ${device.label || 'CÃƒÆ’Ã‚Â¢mera ' + (index + 1)} - TRASEIRA (estimado 4K)`);
+                        log(`   ${device.label || 'Cmera ' + (index + 1)} - TRASEIRA (estimado 4K)`);
                     } else if (label.includes('front') || label.includes('frontal')) {
                         facingMode = 'user';
                         estimatedRes = { width: 1920, height: 1080 };
-                        log(`  ÃƒÂ°Ã…Â¸Ã‚Â¤Ã‚Â³ ${device.label || 'CÃƒÆ’Ã‚Â¢mera ' + (index + 1)} - FRONTAL (estimado 1080p)`);
+                        log(`   ${device.label || 'Cmera ' + (index + 1)} - FRONTAL (estimado 1080p)`);
                     } else {
-                        log(`  ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ ${device.label || 'CÃƒÆ’Ã‚Â¢mera ' + (index + 1)} - Desconhecida`);
+                        log(`   ${device.label || 'Cmera ' + (index + 1)} - Desconhecida`);
                     }
                     
                     return {
                         id: device.deviceId,
-                        label: device.label || `CÃƒÆ’Ã‚Â¢mera ${index + 1}`,
+                        label: device.label || `Cmera ${index + 1}`,
                         facingMode: facingMode,
                         maxResolution: estimatedRes
                     };
@@ -368,7 +368,7 @@
                     return currentPixels > bestPixels ? current : best;
                 }, availableCameras[0]);
                 
-                log(`ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â  Melhor: ${bestCamera.label}`);
+                log(` Melhor: ${bestCamera.label}`);
                 
                 cameraSelect.innerHTML = '';
                 availableCameras.forEach((cam) => {
@@ -376,9 +376,9 @@
                     option.value = cam.id;
                     
                     const isBest = cam.id === bestCamera.id;
-                    const facingIcon = cam.facingMode === 'environment' ? 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â·' : 
-                                      cam.facingMode === 'user' ? 'ÃƒÂ°Ã…Â¸Ã‚Â¤Ã‚Â³' : 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹';
-                    const bestBadge = isBest ? ' ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â ' : '';
+                    const facingIcon = cam.facingMode === 'environment' ? '' : 
+                                      cam.facingMode === 'user' ? '' : '';
+                    const bestBadge = isBest ? ' ' : '';
                     
                     option.textContent = `${facingIcon} ${cam.label}${bestBadge}`;
                     
@@ -397,10 +397,10 @@
                     sendCameraListToDesktop();
                 }
                 
-                log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ DetecÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o completa!');
+                log(' Deteco completa!');
                 
             } catch (e) {
-                log('ÃƒÂ¢Ã‚ÂÃ…â€™ Erro: ' + e.message);
+                log(' Erro: ' + e.message);
                 cameraSelect.innerHTML = '<option>Erro ao detectar</option>';
             }
         }
@@ -420,7 +420,7 @@
                 selectedCameraId: selectedCameraId
             });
             
-            log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Lista enviada');
+            log(' Lista enviada');
         }
 
         function updateCameraInfo() {
@@ -433,8 +433,8 @@
             
             cameraInfo.innerHTML = `
                 <strong>${cam.label}</strong><br>
-                ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â ${facingText}<br>
-                ${isBest ? 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â  Melhor cÃƒÆ’Ã‚Â¢mera!' : ''}
+                 ${facingText}<br>
+                ${isBest ? ' Melhor cmera!' : ''}
             `;
             cameraInfo.style.display = 'block';
             cameraInfo.className = isBest ? 'camera-info best' : 'camera-info';
@@ -446,7 +446,7 @@
             
             if (localStream) {
                 restartBtn.style.background = '#FF9800';
-                restartBtn.textContent = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ TROCAR CÃƒÆ’Ã¢â‚¬Å¡MERA';
+                restartBtn.textContent = ' TROCAR CMERA';
             }
         });
 
@@ -454,7 +454,7 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-                console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log(' CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
             if (!capabilities.zoom) return;
 
             const clampedZoom = Math.max(zoomMin, Math.min(zoomMax, parseFloat(zoomLevel)));
@@ -462,7 +462,7 @@
             currentZoomLevel = clampedZoom;
             const displayZoom = clampedZoom.toFixed(1);
             currentZoom.textContent = displayZoom + 'x';
-            zoomIndicator.textContent = `ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â ${displayZoom}x`;
+            zoomIndicator.textContent = ` ${displayZoom}x`;
             zoomInfo.textContent = `Zoom: ${displayZoom}x / Max: ${zoomMax.toFixed(1)}x`;
 
             if (zoomDebounceTimer) {
@@ -492,7 +492,7 @@
             const fps = parseInt(fpsSelect.value);
             const bitrate = parseInt(bitrateSelect.value);
 
-            log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ ${width}x${height} @ ${fps}fps`);
+            log(` ${width}x${height} @ ${fps}fps`);
             updateStatus('Iniciando...');
 
             try {
@@ -516,7 +516,7 @@
 
                 const settings = videoTrack.getSettings();
                 const capabilities = videoTrack.getCapabilities();
-                console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log(' CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
 
                 const cam = availableCameras.find(c => c.id === settings.deviceId);
                 if (cam) {
@@ -547,9 +547,9 @@
                 currentFps.textContent = actualFps + ' fps';
                 currentBitrate.textContent = (bitrate/1000000).toFixed(1) + ' Mbps';
 
-                log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ ${actualRes} @ ${actualFps}fps`);
+                log(` ${actualRes} @ ${actualFps}fps`);
 
-                updateStatus('CÃƒÆ’Ã‚Â¢mera OK');
+                updateStatus('Cmera OK');
                 
                 if (socket) {
                     socket.emit('config-update', { 
@@ -563,7 +563,7 @@
                 return true;
 
             } catch (e) {
-                log('ÃƒÂ¢Ã‚ÂÃ…â€™ Erro: ' + e.message);
+                log(' Erro: ' + e.message);
                 updateStatus('Erro');
                 return false;
             }
@@ -584,7 +584,7 @@
             };
 
             peerConnection.onconnectionstatechange = () => {
-                log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€ ' + peerConnection.connectionState);
+                log(' ' + peerConnection.connectionState);
                 if (peerConnection.connectionState === 'connected') {
                     updateStatus('Transmitindo');
                 }
@@ -612,7 +612,7 @@
 
         startBtn.onclick = async () => {
             roomId = roomIdInput.value.trim();
-            if (!roomId) return alert('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Digite um ID!');
+            if (!roomId) return alert(' Digite um ID!');
 
             startBtn.disabled = true;
             
@@ -627,7 +627,7 @@
             socket = io();
 
             socket.on('connect', () => {
-                log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Socket conectado');
+                log(' Socket conectado');
                 updateStatus('Socket OK');
                 socket.emit('join-room', roomId);
                 
@@ -637,7 +637,7 @@
             });
 
             socket.on('user-joined', async (userId) => {
-                log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Desktop: ' + userId);
+                log(' Desktop: ' + userId);
                 
                 setTimeout(async () => {
                     await setupPeerConnection();
@@ -672,7 +672,7 @@
 
             socket.on('change-camera', (data) => {
                 if (data.cameraId) {
-                    log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬â€œÃ‚Â¥ÃƒÂ¯Ã‚Â¸Ã‚Â Troca: ${data.cameraId}`);
+                    log(` Troca: ${data.cameraId}`);
                     selectedCameraId = data.cameraId;
                     cameraSelect.value = data.cameraId;
                     updateCameraInfo();
@@ -699,22 +699,22 @@
 
 
             socket.on('request-camera-list', () => {
-                console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬â€œÃ‚Â¥ÃƒÂ¯Ã‚Â¸Ã‚Â Desktop solicitou lista de cÃƒÆ’Ã‚Â¢meras');
+                console.log(' Desktop solicitou lista de cmeras');
                 sendCameraListToDesktop();
             });
 
             socket.on('disconnect', () => {
-                log('ÃƒÂ¢Ã‚ÂÃ…â€™ Desconectado');
+                log(' Desconectado');
                 updateStatus('Desconectado');
             });
 
             restartBtn.style.display = 'block';
-            startBtn.textContent = 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ativa';
+            startBtn.textContent = ' Ativa';
             roomIdInput.disabled = true;
         };
 
         async function restartCamera() {
-            log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Reiniciando...');
+            log(' Reiniciando...');
             
             const previousZoom = currentZoomLevel;
             
@@ -734,7 +734,7 @@
                     applyZoom(previousZoom);
                 }, 500);
                 
-                log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Reiniciada!');
+                log(' Reiniciada!');
             }
         }
 
@@ -743,7 +743,7 @@
         [resolutionSelect, bitrateSelect, fpsSelect].forEach(select => {
             select.addEventListener('change', () => {
                 restartBtn.style.background = '#FF9800';
-                restartBtn.textContent = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ APLICAR';
+                restartBtn.textContent = ' APLICAR';
             });
         });
 
@@ -751,7 +751,7 @@
             if (!videoTrack) return;
 
             const capabilities = videoTrack.getCapabilities();
-                console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¹ CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+                console.log(' CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
 
             if (data.control === 'iso' && capabilities.iso) {
                 const val = parseInt(data.value);
@@ -774,12 +774,12 @@
             navigator.serviceWorker.register('/service-worker.js').catch(() => {});
         }
     
-        // ========== SISTEMA DE ESTATÃSTICAS REAIS ==========
+        // ========== SISTEMA DE ESTATSTICAS REAIS ==========
         let statsInterval = null;
 
         async function updateRealStats() {
             if (!peerConnection) {
-                console.log('âš ï¸ peerConnection nÃ£o existe ainda');
+                console.log(' peerConnection no existe ainda');
                 return;
             }
 
@@ -818,7 +818,7 @@
                         const bitrate = Math.round(8 * (bytes - window.lastBytes) / (timestamp - window.lastTimestamp));
                         const statBitrate = document.getElementById('stat-bitrate');
                         if (statBitrate) {
-                            statBitrate.innerHTML = `ðŸ“¡ Bitrate: <span class="stat-ok">${bitrate} kbps</span>`;
+                            statBitrate.innerHTML = ` Bitrate: <span class="stat-ok">${bitrate} kbps</span>`;
                         }
                     }
                     window.lastBytes = bytes;
@@ -829,22 +829,22 @@
                         if (report.type === 'codec' && report.mimeType && report.mimeType.includes('video')) {
                             const statCodec = document.getElementById('stat-codec');
                             if (statCodec) {
-                                statCodec.innerHTML = `ðŸ”´ Codec: <span class="stat-ok">${report.mimeType}</span>`;
+                                statCodec.innerHTML = ` Codec: <span class="stat-ok">${report.mimeType}</span>`;
                             }
                         }
                     });
 
-                    // ResoluÃ§Ã£o
+                    // Resoluo
                     const statResolution = document.getElementById('stat-resolution');
                     if (statResolution) {
-                        statResolution.innerHTML = `ðŸ“¹ Res: <span class="stat-ok">${width}x${height}</span>`;
+                        statResolution.innerHTML = ` Res: <span class="stat-ok">${width}x${height}</span>`;
                     }
                     
                     // FPS
                     const fpsClass = fps >= 25 ? 'stat-ok' : fps >= 15 ? 'stat-warning' : 'stat-error';
                     const statFps = document.getElementById('stat-fps');
                     if (statFps) {
-                        statFps.innerHTML = `ðŸŽ¬ FPS: <span class="${fpsClass}">${fps.toFixed(1)}</span>`;
+                        statFps.innerHTML = ` FPS: <span class="${fpsClass}">${fps.toFixed(1)}</span>`;
                     }
 
                     // Pacotes perdidos
@@ -854,7 +854,7 @@
                     const lossClass = lossPercent < 1 ? 'stat-ok' : lossPercent < 5 ? 'stat-warning' : 'stat-error';
                     const statPackets = document.getElementById('stat-packets');
                     if (statPackets) {
-                        statPackets.innerHTML = `ðŸ“¦ Perda: <span class="${lossClass}">${lossPercent}%</span>`;
+                        statPackets.innerHTML = ` Perda: <span class="${lossClass}">${lossPercent}%</span>`;
                     }
 
                     // Qualidade geral
@@ -866,24 +866,24 @@
                     const statQuality = document.getElementById('stat-quality');
                     if (statQuality) {
                         if (qualityIssues.length === 0) {
-                            statQuality.innerHTML = `âš ï¸ Status: <span class="stat-ok">âœ… OK</span>`;
+                            statQuality.innerHTML = ` Status: <span class="stat-ok"> OK</span>`;
                         } else {
-                            statQuality.innerHTML = `âš ï¸ Status: <span class="stat-warning">${qualityIssues.join(', ')}</span>`;
+                            statQuality.innerHTML = ` Status: <span class="stat-warning">${qualityIssues.join(', ')}</span>`;
                         }
                     }
 
-                    console.log('ðŸ“Š Stats atualizados:', {width, height, fps, lossPercent: lossPercent + '%'});
+                    console.log(' Stats atualizados:', {width, height, fps, lossPercent: lossPercent + '%'});
                 } else {
-                    console.log('âš ï¸ Nenhum stat RTP encontrado ainda');
+                    console.log(' Nenhum stat RTP encontrado ainda');
                 }
             } catch (e) {
-                console.error('âŒ Erro ao coletar stats:', e);
+                console.error(' Erro ao coletar stats:', e);
             }
         }
 
-        // Iniciar stats quando conexÃ£o estabelecida
+        // Iniciar stats quando conexo estabelecida
         function startStatsMonitoring() {
-            console.log('ðŸš€ Iniciando monitoramento de stats...');
+            console.log(' Iniciando monitoramento de stats...');
             if (statsInterval) clearInterval(statsInterval);
             statsInterval = setInterval(updateRealStats, 1000);
         }
@@ -893,45 +893,45 @@
         window.RTCPeerConnection = function(...args) {
             const pc = new originalCreatePeerConnection(...args);
             pc.addEventListener('connectionstatechange', () => {
-                console.log('ðŸ”„ Connection state:', pc.connectionState);
+                console.log(' Connection state:', pc.connectionState);
                 if (pc.connectionState === 'connected') {
                     setTimeout(startStatsMonitoring, 1000);
                 }
             });
             return pc;
         };
-        console.log('âœ… Sistema de stats instalado!');
-        // ========== FIM SISTEMA DE ESTATÃSTICAS ==========
+        console.log(' Sistema de stats instalado!');
+        // ========== FIM SISTEMA DE ESTATSTICAS ==========
 
         // ============================================
-        // MANTER TRANSMISSÃO ATIVA EM BACKGROUND
+        // MANTER TRANSMISSO ATIVA EM BACKGROUND
         // ============================================
         
         let wakeLock = null;
         
-        // 1. WAKE LOCK - Mantém tela ativa
+        // 1. WAKE LOCK - Mantm tela ativa
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('🔒 Wake Lock ativado! Tela permanecerá ligada.');
+                    console.log(' Wake Lock ativado! Tela permanecer ligada.');
                     
                     wakeLock.addEventListener('release', () => {
-                        console.log('⚠️ Wake Lock liberado');
+                        console.log(' Wake Lock liberado');
                     });
                 } else {
-                    console.log('⚠️ Wake Lock não suportado neste dispositivo');
+                    console.log(' Wake Lock no suportado neste dispositivo');
                 }
             } catch (err) {
-                console.error('❌ Erro ao ativar Wake Lock:', err);
+                console.error(' Erro ao ativar Wake Lock:', err);
             }
         }
         
-        // 2. PREVENIR SUSPENSÃO quando página fica oculta
+        // 2. PREVENIR SUSPENSO quando pgina fica oculta
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                console.log('👁️ App foi para BACKGROUND');
-                console.log('✅ Mas transmissão continua ATIVA!');
+                console.log(' App foi para BACKGROUND');
+                console.log(' Mas transmisso continua ATIVA!');
                 
                 // Tentar reativar Wake Lock se perdeu
                 if (wakeLock !== null && wakeLock.released) {
@@ -941,21 +941,21 @@
                 // Garantir que stream continue
                 if (localStream) {
                     localStream.getTracks().forEach(track => {
-                        track.enabled = true; // Forçar manter ativo
-                        console.log('📹 Track mantido ativo:', track.kind);
+                        track.enabled = true; // Forar manter ativo
+                        console.log(' Track mantido ativo:', track.kind);
                     });
                 }
             } else {
-                console.log('👁️ App voltou para FOREGROUND');
+                console.log(' App voltou para FOREGROUND');
             }
         });
         
-        // 3. MANTER CONEXÃO WEBRTC viva mesmo em background
+        // 3. MANTER CONEXO WEBRTC viva mesmo em background
         setInterval(() => {
             if (peerConnection && peerConnection.connectionState === 'connected') {
-                // Ping para manter conexão viva
+                // Ping para manter conexo viva
                 peerConnection.getStats().then(stats => {
-                    console.log('💓 Heartbeat: Conexão ativa');
+                    console.log(' Heartbeat: Conexo ativa');
                 });
             }
         }, 5000);
@@ -963,7 +963,7 @@
         // 4. PREVENIR SLEEP do dispositivo
         let noSleepInterval;
         function preventSleep() {
-            // Video invisível que impede sleep
+            // Video invisvel que impede sleep
             const video = document.createElement('video');
             video.setAttribute('playsinline', '');
             video.setAttribute('muted', '');
@@ -972,7 +972,7 @@
             video.style.pointerEvents = 'none';
             document.body.appendChild(video);
             
-            // Criar stream mínimo para manter ativo
+            // Criar stream mnimo para manter ativo
             const canvas = document.createElement('canvas');
             canvas.width = 1;
             canvas.height = 1;
@@ -987,20 +987,20 @@
                 ctx.fillRect(0, 0, 1, 1);
             }, 15000);
             
-            console.log('😴 Sistema anti-sleep ativado!');
+            console.log(' Sistema anti-sleep ativado!');
         }
         
-        // 5. INICIAR tudo após câmera conectar
+        // 5. INICIAR tudo aps cmera conectar
         const originalGetUserMedia = navigator.mediaDevices.getUserMedia;
         navigator.mediaDevices.getUserMedia = async function(...args) {
             const stream = await originalGetUserMedia.apply(this, args);
             
-            // Ativar proteções
-            console.log('🚀 Ativando proteções de background...');
+            // Ativar protees
+            console.log(' Ativando protees de background...');
             await requestWakeLock();
             preventSleep();
             
-            console.log('✅ Proteções ativadas! Transmissão não pausará.');
+            console.log(' Protees ativadas! Transmisso no pausar.');
             
             return stream;
         };
@@ -1012,6 +1012,6 @@
             }
         });
         
-        console.log('🛡️ Sistema de transmissão contínua configurado!');
+        console.log(' Sistema de transmisso contnua configurado!');
 
     </script></body></html>

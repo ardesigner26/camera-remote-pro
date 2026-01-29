@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Remote Pro - Mobile</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+        .id-input-section {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .id-input-section h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+        input[type="text"]::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        .status-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .status-value {
+            color: #0f0;
+            font-weight: bold;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+            border: 3px solid #0f0;
+            margin-bottom: 20px;
+            background: #000;
+        }
+        .config-section {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .config-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        select, button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        select {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 15px;
+        }
+        button:disabled {
+            background: #555;
+            opacity: 0.5;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        .zoom-display {
+            background: rgba(102, 126, 234, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .instruction {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 CAMERA REMOTE PRO</h1>
+        
+        <div class="instruction">
+            ℹ️ Digite um ID personalizado (ex: camera123)<br>
+            Use o MESMO ID no Desktop para conectar!
+        </div>
+
+        <div class="id-input-section">
+            <h3>🆔 SEU ID PERSONALIZADO</h3>
+            <input type="text" id="roomIdInput" placeholder="Digite seu ID (ex: camera123)" maxlength="20">
+        </div>
+
+        <div class="status-panel">
+            <div class="status-row">
+                <span>Status:</span>
+                <span class="status-value" id="status">Digite um ID acima</span>
+            </div>
+            <div class="status-row">
+                <span>Resolução:</span>
+                <span class="status-value" id="currentResolution">-</span>
+            </div>
+            <div class="status-row">
+                <span>FPS:</span>
+                <span class="status-value" id="currentFps">-</span>
+            </div>
+            <div class="status-row">
+                <span>Conexão:</span>
+                <span class="status-value" id="connectionStatus">Aguardando</span>
+            </div>
+        </div>
+
+        <div class="zoom-display" id="zoomDisplay">
+            Zoom: 1.0x
+        </div>
+
+        <video id="video" autoplay playsinline muted></video>
+
+        <div class="config-section">
+            <div class="config-title">📹 RESOLUÇÃO</div>
+            <select id="resolutionSelect">
+                <option value="1280x720">HD 720p</option>
+                <option value="1920x1080" selected>Full HD 1080p</option>
+                <option value="2560x1440">2K QHD</option>
+                <option value="3840x2160">4K UHD</option>
+            </select>
+        </div>
+
+        <div class="config-section">
+            <div class="config-title">🎬 FPS</div>
+            <select id="fpsSelect">
+                <option value="24">24 FPS</option>
+                <option value="30" selected>30 FPS</option>
+                <option value="60">60 FPS</option>
+            </select>
+        </div>
+        
+        <button id="startBtn">🚀 INICIAR CÂMERA E CONECTAR</button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const startBtn = document.getElementById('startBtn');
+        const roomIdInput = document.getElementById('roomIdInput');
+        const statusSpan = document.getElementById('status');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const zoomDisplay = document.getElementById('zoomDisplay');
+        const logDiv = document.getElementById('log');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const fpsSelect = document.getElementById('fpsSelect');
+        const currentResolution = document.getElementById('currentResolution');
+        const currentFps = document.getElementById('currentFps');
+
+        let peer, localStream, videoTrack, myRoomId;
+
+        function log(msg) {
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function updateStatus(text) {
+            statusSpan.textContent = text;
+        }
+
+        function updateConnectionStatus(text) {
+            connectionStatus.textContent = text;
+        }
+
+        async function startCamera() {
+            const [width, height] = resolutionSelect.value.split('x').map(Number);
+            const fps = parseInt(fpsSelect.value);
+
+            try {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: width },
+                        height: { ideal: height },
+                        frameRate: { ideal: fps }
+                    },
+                    audio: false
+                };
+
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = localStream;
+                videoTrack = localStream.getVideoTracks()[0];
+
+                const settings = videoTrack.getSettings();
+                currentResolution.textContent = `${settings.width}x${settings.height}`;
+                currentFps.textContent = settings.frameRate + ' fps';
+
+                log(`✅ Câmera: ${settings.width}x${settings.height} @ ${settings.frameRate}fps`);
+                
+                const capabilities = videoTrack.getCapabilities();
+                if (capabilities.zoom) {
+                    log(`✅ Zoom: ${capabilities.zoom.min.toFixed(1)}x - ${capabilities.zoom.max.toFixed(1)}x`);
+                } else {
+                    log('⚠️ Zoom não suportado');
+                }
+
+                if (capabilities.iso) {
+                    log(`✅ ISO: ${capabilities.iso.min} - ${capabilities.iso.max}`);
+                }
+
+                if (capabilities.exposureCompensation) {
+                    log(`✅ Exposição disponível`);
+                }
+
+                updateStatus('Câmera OK');
+                return true;
+
+            } catch (e) {
+                log('❌ Erro câmera: ' + e.message);
+                alert('Erro ao acessar câmera: ' + e.message);
+                return false;
+            }
+        }
+
+        function initPeer() {
+            log('🔄 Iniciando conexão P2P...');
+            
+            peer = new Peer('mobile-' + myRoomId);
+
+            peer.on('open', (id) => {
+                log('✅ Conectado como: ' + id);
+                updateStatus('Aguardando Desktop conectar...');
+                updateConnectionStatus('Aguardando Desktop');
+            });
+
+            peer.on('error', (err) => {
+                log('❌ Erro: ' + err.type);
+                if (err.type === 'unavailable-id') {
+                    log('⚠️ ID já em uso! Use outro ID.');
+                    alert('⚠️ Este ID já está em uso! Digite outro ID.');
+                    startBtn.disabled = false;
+                    startBtn.textContent = '🚀 INICIAR CÂMERA E CONECTAR';
+                }
+            });
+
+            peer.on('connection', (conn) => {
+                log('📡 Desktop conectado!');
+                updateConnectionStatus('Desktop Conectado');
+                
+                conn.on('data', (data) => {
+                    applyCommand(data);
+                });
+
+                conn.on('close', () => {
+                    log('❌ Desktop desconectado');
+                    updateConnectionStatus('Desconectado');
+                });
+            });
+
+            peer.on('call', (call) => {
+                log('📞 Recebendo chamada de vídeo...');
+                
+                if (localStream) {
+                    call.answer(localStream);
+                    log('✅ Transmitindo vídeo!');
+                    updateStatus('Transmitindo');
+                    updateConnectionStatus('Transmitindo Vídeo');
+                }
+            });
+        }
+
+        startBtn.onclick = async () => {
+            const roomId = roomIdInput.value.trim();
+            
+            if (!roomId) {
+                alert('⚠️ Digite um ID!');
+                return;
+            }
+
+            if (roomId.length < 4) {
+                alert('⚠️ ID deve ter pelo menos 4 caracteres!');
+                return;
+            }
+
+            myRoomId = roomId;
+            startBtn.disabled = true;
+            startBtn.textContent = '⏳ Iniciando...';
+
+            log('🔄 ID escolhido: ' + myRoomId);
+
+            const cameraOk = await startCamera();
+            if (!cameraOk) {
+                startBtn.disabled = false;
+                startBtn.textContent = '🚀 INICIAR CÂMERA E CONECTAR';
+                return;
+            }
+
+            initPeer();
+            
+            startBtn.textContent = '✅ Câmera Ativa';
+            roomIdInput.disabled = true;
+        };
+
+        function applyCommand(data) {
+            if (!videoTrack) {
+                log('⚠️ VideoTrack não disponível');
+                return;
+            }
+
+            const capabilities = videoTrack.getCapabilities();
+
+            if (data.control === 'zoom') {
+                if (!capabilities.zoom) {
+                    return;
+                }
+
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.zoom.min, Math.min(capabilities.zoom.max, val));
+                
+                zoomDisplay.textContent = `Zoom: ${clamped.toFixed(1)}x`;
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ zoom: clamped }]
+                }).catch(() => {});
+            }
+
+            if (data.control === 'iso') {
+                if (!capabilities.iso) {
+                    return;
+                }
+
+                const val = parseInt(data.value);
+                const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ iso: clamped }]
+                }).then(() => {
+                    log(`✅ ISO: ${clamped}`);
+                }).catch(() => {});
+            }
+
+            if (data.control === 'exposure') {
+                if (!capabilities.exposureCompensation) {
+                    return;
+                }
+
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ exposureCompensation: clamped }]
+                }).then(() => {
+                    log(`✅ Exposição: ${clamped.toFixed(1)}`);
+                }).catch(() => {});
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => log('✅ PWA registrado'))
+                .catch(() => {});
+        }
+    </script>
+</body>
+</html>
