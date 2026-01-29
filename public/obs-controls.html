@@ -168,7 +168,7 @@
 <body>
     <div id="stats-panel">
         <div class="stat-line"> <strong>QUALIDADE REAL</strong></div>
-        <div class="stat-line" id="stat-resolution"> Resoluo: --</div>
+        <div class="stat-line" id="stat-resolution"> Resolucao: --</div>
         <div class="stat-line" id="stat-fps"> FPS: --</div>
         <div class="stat-line" id="stat-bitrate"> Bitrate: --</div>
         <div class="stat-line" id="stat-codec"> Codec: --</div>
@@ -177,24 +177,24 @@
     </div>
     <div class="container">
         <h1> OBS CONTROLS PANEL</h1>
-        <p class="subtitle">Controle remoto completo para CMERA no OBS</p>
+        <p class="subtitle">Controle remoto completo para Camera no OBS</p>
 
         <div class="status-bar">
             <div class="room-info"> Sala: <span id="roomName">-</span></div>
             <div class="status-badge status-connected" id="statusBadge">Conectado</div>
         </div>
 
-        <!-- SELEO DE CMERA -->
+        <!-- SELEO DE Camera -->
         <div class="control-section">
-            <h2> CMERA</h2>
+            <h2> Camera</h2>
             <div class="control-row">
-                <label>CMERA Ativa:</label>
+                <label>Camera Ativa:</label>
                 <select id="cameraSelect">
                     <option>Aguardando lista do mobile...</option>
                 </select>
             </div>
-            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver CMERAs disponveis</div>
-            <button id="changeCameraBtn"> TROCAR CMERA</button>
+            <div class="camera-info" id="cameraInfo">Conecte o mobile para ver Cameras disponveis</div>
+            <button id="changeCameraBtn"> TROCAR Camera</button>
         </div>
 
         <!-- ZOOM -->
@@ -209,12 +209,12 @@
             </div>
         </div>
 
-        <!-- QUALIDADE DE VDEO -->
+        <!-- QUALIDADE DE VIDEO -->
         <div class="control-section">
-            <h2> QUALIDADE DE VDEO</h2>
+            <h2> QUALIDADE DE VIDEO</h2>
             
             <div class="control-row">
-                <label>RESOLUO:</label>
+                <label>Resolucao:</label>
                 <select id="resolutionSelect">
                     <option value="640x480">640x480 (SD)</option>
                     <option value="1280x720">1280x720 (HD)</option>
@@ -222,7 +222,7 @@
                     <option value="3840x2160">3840x2160 (4K)</option>
                 </select>
             </div>
-            <button id="updateResolutionBtn"> APLICAR RESOLUO</button>
+            <button id="updateResolutionBtn"> APLICAR Resolucao</button>
 
             <div class="control-row">
                 <label>Bitrate:</label>
@@ -252,11 +252,11 @@
             <button id="updateFpsBtn"> APLICAR FPS</button>
         </div>
 
-        <!-- LATNCIA -->
+        <!-- Latencia -->
         <div class="control-section">
-            <h2>? LATNCIA</h2>
+            <h2>? Latencia</h2>
             <div class="control-row">
-                <label>Buffer de Latncia:</label>
+                <label>Buffer de Latencia:</label>
                 <select id="latencySelect">
                     <option value="0">0ms (Ultra Baixa)</option>
                     <option value="50">50ms (Muito Baixa)</option>
@@ -265,12 +265,12 @@
                     <option value="500">500ms (Alta)</option>
                 </select>
             </div>
-            <button id="updateLatencyBtn">?? APLICAR LATNCIA</button>
+            <button id="updateLatencyBtn">?? APLICAR Latencia</button>
         </div>
 
-        <!-- CONTROLES DE CMERA -->
+        <!-- CONTROLES DE Camera -->
         <div class="control-section">
-            <h2>??? CONTROLES AVANADOS</h2>
+            <h2>??? CONTROLES AVANCADOS</h2>
             
             <div class="control-row">
                 <label>?? ISO:</label>
@@ -281,7 +281,7 @@
             </div>
 
             <div class="control-row">
-                <label>?? Exposio:</label>
+                <label>?? Exposicao:</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0">
                     <span class="slider-value" id="exposureValue">0.0</span>
@@ -351,17 +351,17 @@
                 log('? CONTROLES PRONTOS!');
                 updateStatus('Conectado', 'connected');
                 
-                // Solicitar lista de CMERAs do mobile
+                // Solicitar lista de Cameras do mobile
                 setTimeout(() => {
                     socket.emit('request-camera-list', { roomId });
-                    log('?? Solicitando lista de CMERAs...');
+                    log('?? Solicitando lista de Cameras...');
                 }, 1000);
             });
 
-            // Receber lista de CMERAs
+            // Receber lista de Cameras
             socket.on('camera-list', (data) => {
                 if (data.cameras && data.cameras.length > 0) {
-                    log(`?? Recebidas ${data.cameras.length} CMERA(s) do celular`);
+                    log(`?? Recebidas ${data.cameras.length} Camera(s) do celular`);
                     
                     availableCameras = data.cameras;
                     cameraSelect.innerHTML = '';
@@ -383,23 +383,23 @@
                         }
                     });
                     
-                    cameraInfo.textContent = `? ${data.cameras.length} CMERA(s) disponvel(is)`;
+                    cameraInfo.textContent = `? ${data.cameras.length} Camera(s) disponvel(is)`;
                     cameraInfo.style.color = '#28a745';
                 }
             });
 
-            // TROCAR CMERA
+            // TROCAR Camera
             changeCameraBtn.onclick = () => {
                 const selectedCameraId = cameraSelect.value;
                 socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
                 log(`?? Trocando para: ${cameraSelect.options[cameraSelect.selectedIndex].text}`);
             };
 
-            // RESOLUO
+            // Resolucao
             updateResolutionBtn.onclick = () => {
                 const value = resolutionSelect.value;
                 socket.emit('change-config', { roomId, type: 'resolution', value });
-                log(`?? RESOLUO: ${value}`);
+                log(`?? Resolucao: ${value}`);
             };
 
             // BITRATE
@@ -416,11 +416,11 @@
                 log(`?? FPS: ${value}`);
             };
 
-            // LATNCIA
+            // Latencia
             updateLatencyBtn.onclick = () => {
                 const value = latencySelect.value;
                 socket.emit('change-config', { roomId, type: 'latency', value });
-                log(`? Latncia: ${value}ms`);
+                log(`? Latencia: ${value}ms`);
             };
 
             // ZOOM
@@ -451,7 +451,7 @@
                 }, 150);
             });
 
-            // EXPOSIO
+            // Exposicao
             let exposureDebounceTimer = null;
             exposureSlider.addEventListener('input', function() {
                 const value = exposureSlider.value;
@@ -461,7 +461,7 @@
                 
                 exposureDebounceTimer = setTimeout(() => {
                     socket.emit('camera-control', { roomId, control: 'exposure', value });
-                    log(`?? Exposio: ${value}`);
+                    log(`?? Exposicao: ${value}`);
                 }, 150);
             });
 
@@ -531,7 +531,7 @@
                         }
                     });
 
-                    // Resoluo
+                    // Resolucao
                     const statResolution = document.getElementById('stat-resolution');
                     if (statResolution) {
                         statResolution.innerHTML = ` Res: <span class="stat-ok">${width}x${height}</span>`;
@@ -602,4 +602,5 @@
 </script>
 </body>
 </html>
+
 

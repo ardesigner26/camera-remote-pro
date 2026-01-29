@@ -184,7 +184,7 @@
 <body>
     <div class="container">
         <h1> CAMERA REMOTE PRO</h1>
-        <div class="subtitle"> Deteco Rpida + Zoom + Latncia Zero</div>
+        <div class="subtitle"> Deteccao Rapida + Zoom + Latencia Zero</div>
 
         <div class="status-panel">
             <div class="status-row">
@@ -192,11 +192,11 @@
                 <span class="status-value" id="status">Desconectado</span>
             </div>
             <div class="status-row">
-                <span>Cmera:</span>
+                <span>Camera:</span>
                 <span class="status-value" id="currentCamera">-</span>
             </div>
             <div class="status-row">
-                <span>Resoluo:</span>
+                <span>Resolucao:</span>
                 <span class="status-value" id="currentResolution">-</span>
             </div>
             <div class="status-row">
@@ -220,7 +220,7 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title"> SELECIONAR CMERA</div>
+            <div class="config-title"> SELECIONAR Camera</div>
             <select id="cameraSelect" disabled>
                 <option value="">Detectando...</option>
             </select>
@@ -228,7 +228,7 @@
         </div>
 
         <div class="config-section">
-            <div class="config-title"> RESOLUO</div>
+            <div class="config-title"> Resolucao</div>
             <select id="resolutionSelect">
                 <option value="640x480">VGA 480p (640x480)</option>
                 <option value="1280x720">HD 720p (1280x720)</option>
@@ -257,11 +257,11 @@
         <div class="config-section">
             <div class="config-title"> FPS</div>
             <select id="fpsSelect">
-                <option value="15">15 FPS (Ultra Baixa Latncia)</option>
-                <option value="20">20 FPS (Baixa Latncia)</option>
+                <option value="15">15 FPS (Ultra Baixa Latencia)</option>
+                <option value="20">20 FPS (Baixa Latencia)</option>
                 <option value="24">24 FPS (Mdia)</option>
                 <option value="30" selected>30 FPS (Mais ou Menos)</option>
-                <option value="60">60 FPS (Alta Latncia)</option>
+                <option value="60">60 FPS (Alta Latencia)</option>
             </select>
         </div>
 
@@ -269,7 +269,7 @@
         <input type="text" id="roomId" placeholder="Digite o ID da sala">
         
         <button id="startBtn"> INICIAR</button>
-        <button id="restartBtn" style="display:none; background:#f44336;"> APLICAR MUDANAS</button>
+        <button id="restartBtn" style="display:none; background:#f44336;"> APLICAR MUDANCAS</button>
 
         <div class="log" id="log"></div>
     </div>
@@ -324,9 +324,9 @@
             statusSpan.textContent = text;
         }
 
-        //  DETECO RPIDA (SEM TESTES LENTOS)
+        //  Deteccao Rapida (SEM TESTES LENTOS)
         async function detectCameras() {
-            log(' Detectando cmeras...');
+            log(' Detectando Cameras...');
             
             try {
                 const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -335,7 +335,7 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 
-                log(` ${videoDevices.length} cmera(s) encontrada(s)`);
+                log(` ${videoDevices.length} Camera(s) encontrada(s)`);
                 
                 availableCameras = videoDevices.map((device, index) => {
                     const label = device.label.toLowerCase();
@@ -345,18 +345,18 @@
                     if (label.includes('back') || label.includes('rear') || label.includes('traseira')) {
                         facingMode = 'environment';
                         estimatedRes = { width: 3840, height: 2160 };
-                        log(`   ${device.label || 'Cmera ' + (index + 1)} - TRASEIRA (estimado 4K)`);
+                        log(`   ${device.label || 'Camera ' + (index + 1)} - TRASEIRA (estimado 4K)`);
                     } else if (label.includes('front') || label.includes('frontal')) {
                         facingMode = 'user';
                         estimatedRes = { width: 1920, height: 1080 };
-                        log(`   ${device.label || 'Cmera ' + (index + 1)} - FRONTAL (estimado 1080p)`);
+                        log(`   ${device.label || 'Camera ' + (index + 1)} - FRONTAL (estimado 1080p)`);
                     } else {
-                        log(`   ${device.label || 'Cmera ' + (index + 1)} - Desconhecida`);
+                        log(`   ${device.label || 'Camera ' + (index + 1)} - Desconhecida`);
                     }
                     
                     return {
                         id: device.deviceId,
-                        label: device.label || `Cmera ${index + 1}`,
+                        label: device.label || `Camera ${index + 1}`,
                         facingMode: facingMode,
                         maxResolution: estimatedRes
                     };
@@ -397,7 +397,7 @@
                     sendCameraListToDesktop();
                 }
                 
-                log(' Deteco completa!');
+                log(' Deteccao completa!');
                 
             } catch (e) {
                 log(' Erro: ' + e.message);
@@ -434,7 +434,7 @@
             cameraInfo.innerHTML = `
                 <strong>${cam.label}</strong><br>
                  ${facingText}<br>
-                ${isBest ? ' Melhor cmera!' : ''}
+                ${isBest ? ' Melhor Camera!' : ''}
             `;
             cameraInfo.style.display = 'block';
             cameraInfo.className = isBest ? 'camera-info best' : 'camera-info';
@@ -446,7 +446,7 @@
             
             if (localStream) {
                 restartBtn.style.background = '#FF9800';
-                restartBtn.textContent = ' TROCAR CMERA';
+                restartBtn.textContent = ' TROCAR Camera';
             }
         });
 
@@ -549,7 +549,7 @@
 
                 log(` ${actualRes} @ ${actualFps}fps`);
 
-                updateStatus('Cmera OK');
+                updateStatus('Camera OK');
                 
                 if (socket) {
                     socket.emit('config-update', { 
@@ -699,7 +699,7 @@
 
 
             socket.on('request-camera-list', () => {
-                console.log(' Desktop solicitou lista de cmeras');
+                console.log(' Desktop solicitou lista de Cameras');
                 sendCameraListToDesktop();
             });
 
@@ -834,7 +834,7 @@
                         }
                     });
 
-                    // Resoluo
+                    // Resolucao
                     const statResolution = document.getElementById('stat-resolution');
                     if (statResolution) {
                         statResolution.innerHTML = ` Res: <span class="stat-ok">${width}x${height}</span>`;
@@ -990,7 +990,7 @@
             console.log(' Sistema anti-sleep ativado!');
         }
         
-        // 5. INICIAR tudo aps cmera conectar
+        // 5. INICIAR tudo aps Camera conectar
         const originalGetUserMedia = navigator.mediaDevices.getUserMedia;
         navigator.mediaDevices.getUserMedia = async function(...args) {
             const stream = await originalGetUserMedia.apply(this, args);
@@ -1015,3 +1015,4 @@
         console.log(' Sistema de transmisso contnua configurado!');
 
     </script></body></html>
+

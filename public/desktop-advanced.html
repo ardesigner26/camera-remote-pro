@@ -230,7 +230,7 @@
 <body>
     <div id="stats-panel">
         <div class="stat-line"> <strong>QUALIDADE REAL</strong></div>
-        <div class="stat-line" id="stat-resolution"> Resoluo: --</div>
+        <div class="stat-line" id="stat-resolution"> Resolucao: --</div>
         <div class="stat-line" id="stat-fps"> FPS: --</div>
         <div class="stat-line" id="stat-bitrate"> Bitrate: --</div>
         <div class="stat-line" id="stat-codec"> Codec: --</div>
@@ -239,7 +239,7 @@
     </div>
     <div class="header">
         <h1> CAMERA REMOTE PRO</h1>
-        <div class="subtitle"> Controle Total de Cmeras + Latncia Ultra Baixa</div>
+        <div class="subtitle"> Controle Total de Cameras + Latencia Ultra Baixa</div>
     </div>
 
     <div class="main-grid">
@@ -259,24 +259,24 @@
                 <div class="status-badge" id="statusBadge">Desconectado</div>
             </div>
 
-            <div class="section-title"> SELECIONAR CMERA (Controle Remoto)</div>
+            <div class="section-title"> SELECIONAR Camera (Controle Remoto)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span> CMERA ATIVA</span>
+                    <span> Camera ATIVA</span>
                 </div>
                 <select id="cameraSelectDesktop" disabled>
                     <option value="">Aguardando conexo...</option>
                 </select>
                 <div class="camera-info-desktop" id="cameraInfoDesktop" style="display:none;"></div>
-                <button class="update" id="changeCameraBtn" disabled> TROCAR CMERA NO CELULAR</button>
+                <button class="update" id="changeCameraBtn" disabled> TROCAR Camera NO CELULAR</button>
             </div>
 
-            <div class="section-title"> CONFIGURAES DE VDEO (Controle Remoto)</div>
+            <div class="section-title"> CONFIGURACOES DE VIDEO (Controle Remoto)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span> RESOLUO</span>
+                    <span> Resolucao</span>
                 </div>
                 <select id="resolutionSelect">
                     <option value="1280x720">HD 720p (1280x720)</option>
@@ -284,7 +284,7 @@
                     <option value="2560x1440">2K QHD (2560x1440)</option>
                     <option value="3840x2160">4K UHD (3840x2160)</option>
                 </select>
-                <button class="update" id="updateResolutionBtn" disabled> APLICAR RESOLUO NO CELULAR</button>
+                <button class="update" id="updateResolutionBtn" disabled> APLICAR Resolucao NO CELULAR</button>
             </div>
 
             <div class="control-group">
@@ -292,7 +292,7 @@
                     <span> BITRATE</span>
                 </div>
                 <select id="bitrateSelect">
-                    <option value="5000000">5 Mbps (Economia - Baixa Latncia)</option>
+                    <option value="5000000">5 Mbps (Economia - Baixa Latencia)</option>
                     <option value="10000000">10 Mbps (Balanceado)</option>
                     <option value="15000000" selected>15 Mbps (Alta Qualidade)</option>
                     <option value="20000000">20 Mbps (Muito Alta)</option>
@@ -308,27 +308,27 @@
                 </div>
                 <select id="fpsSelect">
                     <option value="24">24 FPS (Cinema)</option>
-                    <option value="30" selected>30 FPS (Baixa Latncia)</option>
-                    <option value="60">60 FPS (Suave - Alta Latncia)</option>
+                    <option value="30" selected>30 FPS (Baixa Latencia)</option>
+                    <option value="60">60 FPS (Suave - Alta Latencia)</option>
                 </select>
                 <button class="update" id="updateFpsBtn" disabled> APLICAR FPS NO CELULAR</button>
             </div>
 
-            <div class="section-title"> CONTROLE DE LATNCIA (Buffer de Vdeo)</div>
+            <div class="section-title"> CONTROLE DE Latencia (Buffer de VIDEO)</div>
 
             <div class="control-group">
                 <div class="control-label">
-                    <span> LATNCIA DO BUFFER</span>
+                    <span> Latencia DO BUFFER</span>
                     <span class="control-value" id="latencyValue">0ms</span>
                 </div>
                 <input type="range" id="latencySlider" min="0" max="500" step="10" value="0" disabled>
                 <div class="latency-info">
-                     0ms = ZERO buffer (latncia mnima)<br>
-                     Ajuste se vdeo travar/picar
+                     0ms = ZERO buffer (Latencia mnima)<br>
+                     Ajuste se VIDEO travar/picar
                 </div>
             </div>
 
-            <div class="section-title"> CONTROLES DE CMERA</div>
+            <div class="section-title"> CONTROLES DE Camera</div>
 
             <div class="control-group">
                 <div class="control-label">
@@ -349,7 +349,7 @@
 
             <div class="control-group">
                 <div class="control-label">
-                    <span> EXPOSIO</span>
+                    <span> Exposicao</span>
                     <span class="control-value" id="exposureValue">0.0</span>
                 </div>
                 <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0" disabled>
@@ -409,7 +409,7 @@
 
         function applyUltraLowLatency(latencyMs) {
             if (!remoteVideo) {
-                log(' No h elemento de vdeo para aplicar latncia.');
+                log(' No h elemento de VIDEO para aplicar Latencia.');
                 return;
             }
 
@@ -420,13 +420,13 @@
                 // Set playoutDelayHint on the video element
                 if (remoteVideo.playoutDelayHint !== undefined) {
                     remoteVideo.playoutDelayHint = latencySeconds;
-                    log(` playoutDelayHint no vdeo = ${latencyMs}ms`);
+                    log(` playoutDelayHint no VIDEO = ${latencyMs}ms`);
                 }
 
                 // Disable preload if latency is 0 to reduce buffering
                 if (latencyMs === 0) {
                     remoteVideo.preload = 'none';
-                    log(' Preload do vdeo desabilitado.');
+                    log(' Preload do VIDEO desabilitado.');
                 } else {
                     remoteVideo.preload = 'auto'; // Re-enable if not 0
                 }
@@ -448,16 +448,16 @@
                                     log(` jitterBufferTarget no receiver = ${latencyMs}ms`);
                                 }
                             } catch (e) {
-                                log(` Erro ao configurar receiver para latncia: ${e.message}`);
+                                log(` Erro ao configurar receiver para Latencia: ${e.message}`);
                             }
                         }
                     });
                 }
 
-                log(` Latncia configurada para ${latencyMs}ms.`);
+                log(` Latencia configurada para ${latencyMs}ms.`);
 
             } catch (e) {
-                log(` Erro ao aplicar configuraes de latncia: ${e.message}`);
+                log(` Erro ao aplicar CONFIGURACOES de Latencia: ${e.message}`);
             }
         }
 
@@ -474,8 +474,8 @@
             cameraInfoDesktop.innerHTML = `
                 <strong>${cam.label}</strong><br>
                  Posio: ${facingText}<br>
-                 Resoluo Mxima: ${cam.maxResolution.width}x${cam.maxResolution.height}<br>
-                ${cam.isBest ? ' Esta  a cmera com MELHOR resoluo!' : ''}
+                 Resolucao Mxima: ${cam.maxResolution.width}x${cam.maxResolution.height}<br>
+                ${cam.isBest ? ' Esta  a Camera com MELHOR Resolucao!' : ''}
             `;
             cameraInfoDesktop.style.display = 'block';
             cameraInfoDesktop.className = cam.isBest ? 'camera-info-desktop best' : 'camera-info-desktop';
@@ -511,7 +511,7 @@
                 peerConnection = new RTCPeerConnection(config);
 
                 peerConnection.ontrack = (event) => {
-                    log(' VDEO RECEBIDO!');
+                    log(' VIDEO RECEBIDO!');
                     remoteVideo.srcObject = event.streams[0];
                     
                     // Apply latency settings after the video stream is available
@@ -563,7 +563,7 @@
 
             socket.on('camera-list', (data) => {
                 if (data.cameras && data.cameras.length > 0) {
-                    log(` Recebidas ${data.cameras.length} cmera(s) do celular.`);
+                    log(` Recebidas ${data.cameras.length} Camera(s) do celular.`);
                     
                     availableCamerasDesktop = data.cameras;
                     
@@ -589,10 +589,10 @@
                     changeCameraBtn.disabled = false;
                     updateCameraInfoDesktop(); // Update local info display
                     
-                    log(` Lista de cmeras atualizada no desktop.`);
+                    log(` Lista de Cameras atualizada no desktop.`);
                 } else {
-                    log(' Nenhuma cmera recebida do celular ou lista vazia.');
-                    cameraSelectDesktop.innerHTML = '<option value="">Nenhuma cmera disponvel</option>';
+                    log(' Nenhuma Camera recebida do celular ou lista vazia.');
+                    cameraSelectDesktop.innerHTML = '<option value="">Nenhuma Camera disponvel</option>';
                     cameraSelectDesktop.disabled = true;
                     changeCameraBtn.disabled = true;
                     cameraInfoDesktop.style.display = 'none';
@@ -657,7 +657,7 @@
         changeCameraBtn.onclick = () => {
             const selectedCameraId = cameraSelectDesktop.value;
             if (!selectedCameraId) {
-                alert(' Selecione uma cmera para trocar!');
+                alert(' Selecione uma Camera para trocar!');
                 return;
             }
             
@@ -667,15 +667,15 @@
                 socket.emit('change-camera', { roomId, cameraId: selectedCameraId });
                 alert(` Comando enviado! O celular vai trocar para: ${cam.label}`);
             } else {
-                log(' Cmera selecionada no encontrada na lista.');
+                log(' Camera selecionada no encontrada na lista.');
             }
         };
 
         updateResolutionBtn.onclick = () => {
             const value = resolutionSelect.value;
             socket.emit('change-config', { roomId, type: 'resolution', value });
-            log(` Enviando comando para alterar resoluo para: ${value}`);
-            alert(` Comando enviado! O celular vai reiniciar a cmera em ${value}`);
+            log(` Enviando comando para alterar Resolucao para: ${value}`);
+            alert(` Comando enviado! O celular vai reiniciar a Camera em ${value}`);
         };
 
         updateBitrateBtn.onclick = () => {
@@ -700,7 +700,7 @@
             
             // No need to send to mobile, as mobile is the sender and desktop is the receiver
             // The latency settings are applied on the receiving end (desktop/OBS)
-            log(` Latncia do buffer ajustada localmente para: ${latency}ms`);
+            log(` Latencia do buffer ajustada localmente para: ${latency}ms`);
         });
 
         function sendCommand(control, value) {
@@ -741,7 +741,7 @@
             const value = exposureSlider.value;
             exposureValue.textContent = parseFloat(value).toFixed(1);
             sendCommand('exposure', value);
-            log(` Exposio enviada: ${value}`);
+            log(` Exposicao enviada: ${value}`);
         });
     
         // ========== SISTEMA DE ESTATSTICAS REAIS ==========
@@ -804,7 +804,7 @@
                         }
                     });
 
-                    // Resoluo
+                    // Resolucao
                     const statResolution = document.getElementById('stat-resolution');
                     if (statResolution) {
                         statResolution.innerHTML = ` Res: <span class="stat-ok">${width}x${height}</span>`;
@@ -875,3 +875,4 @@
 </script>
 </body>
 </html>
+
