@@ -1,24 +1,11 @@
-{
-  "name": "Camera Remote Pro",
-  "short_name": "CamRemote",
-  "description": "Controle remoto profissional de câmera via WebRTC",
-  "start_url": "/mobile.html",
+﻿{
+  "name": "Camera Remote Pro - Mobile PWA",
+  "short_name": "Camera PWA",
+  "description": "Versão PWA do controle de câmera",
+  "start_url": "/mobile-pwa.html",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#667eea",
   "orientation": "portrait",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+  "background_color": "#000000",
+  "theme_color": "#1a1a1a",
+  "scope": "/"
 }
