@@ -338,6 +338,22 @@
                 <input type="range" id="zoomSlider" min="1" max="10" step="0.01" value="1" disabled>
                 <small style="color: #999; display: block; margin-top: 8px;">Aplica 200ms aps parar de mover</small>
             </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span> ISO</span>
+                    <span class="control-value" id="isoValue">100</span>
+                </div>
+                <input type="range" id="isoSlider" min="100" max="3200" step="100" value="100" disabled>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span> Exposicao</span>
+                    <span class="control-value" id="exposureValue">0.0</span>
+                </div>
+                <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0" disabled>
+            </div>
         </div>
     </div>
 
@@ -363,7 +379,11 @@
         const latencyValue = document.getElementById('latencyValue');
         
         const zoomSlider = document.getElementById('zoomSlider');
+        const isoSlider = document.getElementById('isoSlider');
+        const exposureSlider = document.getElementById('exposureSlider');
         const zoomValue = document.getElementById('zoomValue');
+        const isoValue = document.getElementById('isoValue');
+        const exposureValue = document.getElementById('exposureValue');
         const consoleDiv = document.getElementById('console');
         const zoomIndicatorDesktop = document.getElementById('zoomIndicatorDesktop');
 
@@ -508,6 +528,8 @@
                     updateFpsBtn.disabled = false;
                     latencySlider.disabled = false;
                     zoomSlider.disabled = false;
+                    isoSlider.disabled = false;
+                    exposureSlider.disabled = false;
                 };
 
                 peerConnection.onicecandidate = (e) => {
@@ -620,6 +642,8 @@
                 updateFpsBtn.disabled = true;
                 latencySlider.disabled = true;
                 zoomSlider.disabled = true;
+                isoSlider.disabled = true;
+                exposureSlider.disabled = true;
                 cameraSelectDesktop.disabled = true;
                 changeCameraBtn.disabled = true;
                 
@@ -704,6 +728,20 @@
                 sendCommand('zoom', value);
                 log(` Zoom enviado: ${value.toFixed(1)}x (aps debounce)`);
             }, 150); // 150ms debounce for sending zoom commands
+        });
+
+        isoSlider.addEventListener('input', function() {
+            const value = isoSlider.value;
+            isoValue.textContent = value;
+            sendCommand('iso', value);
+            log(` ISO enviado: ${value}`);
+        });
+
+        exposureSlider.addEventListener('input', function() {
+            const value = exposureSlider.value;
+            exposureValue.textContent = parseFloat(value).toFixed(1);
+            sendCommand('exposure', value);
+            log(` Exposicao enviada: ${value}`);
         });
     
         // ========== SISTEMA DE ESTATSTICAS REAIS ==========

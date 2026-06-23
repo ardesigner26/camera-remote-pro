@@ -776,6 +776,22 @@
 
             const capabilities = videoTrack.getCapabilities();
                 console.log(' CAPABILITIES COMPLETAS:', JSON.stringify(capabilities, null, 2));
+
+            if (data.control === 'iso' && capabilities.iso) {
+                const val = parseInt(data.value);
+                const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
+                videoTrack.applyConstraints({
+                    advanced: [{ iso: clamped }]
+                }).catch(() => {});
+            }
+
+            if (data.control === 'exposure' && capabilities.exposureCompensation) {
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
+                videoTrack.applyConstraints({
+                    advanced: [{ exposureCompensation: clamped }]
+                }).catch(() => {});
+            }
         }
 
         if ('serviceWorker' in navigator) {

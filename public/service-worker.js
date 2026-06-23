@@ -1,15 +1,21 @@
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-});
+const CACHE_NAME = 'camera-remote-v1';
+const urlsToCache = [
+  '/',
+  '/mobile.html',
+  '/desktop.html',
+  '/manifest.json'
+];
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(urlsToCache))
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => response || fetch(event.request))
+  );
 });

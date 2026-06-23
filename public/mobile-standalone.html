@@ -272,6 +272,15 @@
                 } else {
                     log('⚠️ Zoom não suportado');
                 }
+
+                if (capabilities.iso) {
+                    log(`✅ ISO: ${capabilities.iso.min} - ${capabilities.iso.max}`);
+                }
+
+                if (capabilities.exposureCompensation) {
+                    log(`✅ Exposição disponível`);
+                }
+
                 updateStatus('Câmera OK');
                 return true;
 
@@ -381,6 +390,36 @@
                 
                 videoTrack.applyConstraints({
                     advanced: [{ zoom: clamped }]
+                }).catch(() => {});
+            }
+
+            if (data.control === 'iso') {
+                if (!capabilities.iso) {
+                    return;
+                }
+
+                const val = parseInt(data.value);
+                const clamped = Math.max(capabilities.iso.min, Math.min(capabilities.iso.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ iso: clamped }]
+                }).then(() => {
+                    log(`✅ ISO: ${clamped}`);
+                }).catch(() => {});
+            }
+
+            if (data.control === 'exposure') {
+                if (!capabilities.exposureCompensation) {
+                    return;
+                }
+
+                const val = parseFloat(data.value);
+                const clamped = Math.max(capabilities.exposureCompensation.min, Math.min(capabilities.exposureCompensation.max, val));
+                
+                videoTrack.applyConstraints({
+                    advanced: [{ exposureCompensation: clamped }]
+                }).then(() => {
+                    log(`✅ Exposição: ${clamped.toFixed(1)}`);
                 }).catch(() => {});
             }
         }

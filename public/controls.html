@@ -98,13 +98,33 @@
         <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" disabled>
     </div>
 
+    <div class="control-group">
+        <div class="control-label">
+            <span>📷 ISO</span>
+            <span class="control-value" id="isoValue">100</span>
+        </div>
+        <input type="range" id="isoSlider" min="100" max="3200" step="100" value="100" disabled>
+    </div>
+
+    <div class="control-group">
+        <div class="control-label">
+            <span>☀️ EXPOSIÇÃO</span>
+            <span class="control-value" id="exposureValue">0.0</span>
+        </div>
+        <input type="range" id="exposureSlider" min="-3" max="3" step="0.1" value="0" disabled>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const connectBtn = document.getElementById('connectBtn');
         const statusDiv = document.getElementById('status');
         const roomIdInput = document.getElementById('roomIdInput');
         const zoomSlider = document.getElementById('zoomSlider');
+        const isoSlider = document.getElementById('isoSlider');
+        const exposureSlider = document.getElementById('exposureSlider');
         const zoomValue = document.getElementById('zoomValue');
+        const isoValue = document.getElementById('isoValue');
+        const exposureValue = document.getElementById('exposureValue');
 
         let socket, roomId;
 
@@ -130,6 +150,8 @@
                 
                 // Ativar sliders
                 zoomSlider.disabled = false;
+                isoSlider.disabled = false;
+                exposureSlider.disabled = false;
             });
 
             socket.on('disconnect', () => {
@@ -140,6 +162,8 @@
                 
                 // Desativar sliders
                 zoomSlider.disabled = true;
+                isoSlider.disabled = true;
+                exposureSlider.disabled = true;
             });
         };
 
@@ -159,6 +183,18 @@
                 sendCommand('zoom', value);
                 lastZoomSent = now;
             }
+        });
+
+        isoSlider.addEventListener('input', function() {
+            const value = isoSlider.value;
+            isoValue.textContent = value;
+            sendCommand('iso', value);
+        });
+
+        exposureSlider.addEventListener('input', function() {
+            const value = exposureSlider.value;
+            exposureValue.textContent = parseFloat(value).toFixed(1);
+            sendCommand('exposure', value);
         });
     </script>
 </body>
